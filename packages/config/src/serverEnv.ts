@@ -19,6 +19,13 @@ export const serverEnvSchema = z.object({
   // Part 2 (Database): connection string for PostgreSQL (Supabase-managed or self-hosted).
   DATABASE_URL: z.string().min(1).optional(),
 
+  // Part 2 (Database): base64-encoded 32-byte AES-256-GCM key used to encrypt
+  // IMEI/serial fields at rest (see lib/encryption.ts). Generate with
+  // `openssl rand -base64 32`. Optional at boot so the API and health check
+  // still run without it; encrypting/decrypting a real field without it
+  // configured throws immediately rather than silently storing plaintext.
+  ENCRYPTION_KEY: z.string().min(1).optional(),
+
   // Part 3 (Authentication): Supabase Auth project used for identity/session verification.
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),

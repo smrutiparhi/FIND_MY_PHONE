@@ -9,13 +9,14 @@ police complaint drafting, CEIR/Sanchar Saathi guidance) and tracks the case to 
 
 This repository is being built in sequential parts (see `docs/`); this README covers what exists
 today and how to run it. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the technical
-design.
+design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
-**Part 1 — Project architecture.** The monorepo, tooling, health-check API, and a minimal
-frontend that verifies the backend connection are in place. No recovery-case functionality
-exists yet — that starts in Part 2 (Database) and Part 3 (Authentication).
+**Part 2 — Database.** The full PostgreSQL schema (14 migrations, 12 core entities), a
+repository layer with ownership scoping baked into every query, IMEI/serial encryption, demo
+seed data, and 62 tests run against a real Postgres instance. No user-facing recovery-case
+functionality exists yet — that starts in Part 3 (Authentication) and Part 4 (Dashboard).
 
 ## Monorepo layout
 
@@ -56,9 +57,35 @@ the frontend — it calls `GET /api/health` and `GET /api/health/ready` on the A
 result, confirming the two apps can talk to each other.
 
 The API boots without a database, AI provider key, or map provider key configured — those are
-optional until the parts that use them (Database: Part 2, AI Recovery Agent: Part 7, Device
-Location + Map: Part 8). `/api/health/ready` reports each dependency's status honestly (e.g.
-`database: "not_configured"`) rather than pretending they're connected.
+optional until the parts that use them (AI Recovery Agent: Part 7, Device Location + Map: Part 8).
+`/api/health/ready` reports each dependency's status honestly (e.g. `database: "not_configured"`)
+rather than pretending they're connected.
+
+## Database setup
+
+Any Postgres works — a disposable local one is easiest for development:
+
+```bash
+docker run -d --name recoverai-postgres \
+  -e POSTGRES_USER=recoverai -e POSTGRES_PASSWORD=recoverai_dev_only -e POSTGRES_DB=recoverai \
+  -p 55432:5432 postgres:16-alpine
+```
+
+Then in `apps/api/.env`:
+
+```
+DATABASE_URL=postgresql://recoverai:recoverai_dev_only@localhost:55432/recoverai
+ENCRYPTION_KEY=<output of: openssl rand -base64 32>
+```
+
+```bash
+npm run db:migrate -w apps/api   # applies every migration in apps/api/src/db/migrations
+npm run db:seed -w apps/api      # two fictional demo users/cases - see docs/DATABASE.md
+npm run test -w apps/api         # 62 tests against the real database above
+```
+
+See [`docs/DATABASE.md`](docs/DATABASE.md) for the schema, an ER diagram, and the design
+rationale (encryption, ownership scoping, cascade rules).
 
 ## Scripts
 
@@ -71,8 +98,9 @@ Run from the repo root (npm workspaces):
 | `npm run typecheck` | `tsc --noEmit` across every workspace |
 | `npm run lint` | ESLint across the repo |
 | `npm run format` | Prettier write across the repo |
+| `npm run test` | Runs `apps/api`'s test suite (requires a configured `DATABASE_URL`) |
 
-Per-workspace: `npm run dev -w apps/api`, `npm run build -w apps/web`, etc.
+Per-workspace: `npm run dev -w apps/api`, `npm run db:migrate -w apps/api`, etc.
 
 ## Environment variables
 
@@ -80,9 +108,9 @@ Each app has its own `.env.example` documenting every variable it will ever read
 that only become required in a later part (clearly commented with which part introduces them).
 Never commit a real `.env` file — `.gitignore` already excludes it.
 
-- `apps/api/.env.example` — server port, CORS origin, log level, database connection string
-  (Part 2), Supabase project (Part 3 — see Auth architecture note below), AI provider (Part 7),
-  map provider (Part 8).
+- `apps/api/.env.example` — server port, CORS origin, log level, database connection string and
+  encryption key (Part 2), Supabase project (Part 3 — see Auth architecture note below), AI
+  provider (Part 7), map provider (Part 8).
 - `apps/web/.env.example` — API base URL. Only `VITE_`-prefixed variables are ever exposed to the
   browser; never put secrets here.
 

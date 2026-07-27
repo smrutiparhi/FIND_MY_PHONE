@@ -121,13 +121,17 @@ it to resolve the authenticated user id for row-ownership checks. `SUPABASE_URL`
 `SUPABASE_SERVICE_ROLE_KEY` are already reserved in `apps/api/.env.example` (server-only, never
 exposed to the frontend).
 
-## Database access layer (decision made now, implemented in Part 2)
+## Database access layer
 
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
-lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used today only
-by the readiness endpoint. Part 2 adds migrations, the full schema, and a repository/service
-layer so no SQL lives inside controllers.
+lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
+readiness endpoint. Part 2 built out the full schema (14 hand-written SQL migrations, no ORM), a
+repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
+interface so a transaction client can substitute for the pool), and 62 tests run against a real
+Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
+rationale (encryption strategy, ownership scoping, cascade rules, and two Postgres gotchas around
+enum literals and custom enum array types that the test suite caught).
 
 ## AI provider abstraction
 
@@ -162,9 +166,11 @@ integration confirms it or the user confirms completion.
 
 Already in place: `helmet` security headers, CORS restricted to `WEB_ORIGIN`, strict TypeScript,
 a Zod validation pattern ready for input-bearing routes, structured logging with secret
-redaction, and a baseline rate limiter. Row-level ownership enforcement, auth-specific rate
-limiting, IDOR/XSS/CSRF/SSRF/file-upload hardening, and a full threat model arrive alongside the
-features they protect (Parts 3, 15, 20) since there's nothing to authorize or harden yet.
+redaction, a baseline rate limiter, and (Part 2) ownership-scoped repository methods for every
+entity plus AES-256-GCM encryption for IMEI/serial fields - see `DATABASE.md`. Auth-specific rate
+limiting, route-level authorization (there are no routes yet to protect), IDOR/XSS/CSRF/SSRF/
+file-upload hardening, and a full threat model arrive alongside the features they protect (Parts
+3, 15, 20).
 
 ## Environment configuration
 

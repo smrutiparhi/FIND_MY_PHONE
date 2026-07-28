@@ -29,3 +29,19 @@ export const createRecoveryCaseWizardSchema = z.object({
   ),
   deviceFindingAvailable: triStateSchema,
 });
+
+export const caseIdParamsSchema = z.object({
+  caseId: z.string().uuid(),
+});
+
+export const caseActionParamsSchema = z.object({
+  caseId: z.string().uuid(),
+  actionId: z.string().uuid(),
+});
+
+// BLOCKED/PENDING toggling is the Recovery Decision Engine's own territory
+// (see ENGINE_CONTROLLED_STATUSES in evaluateRecoveryDecision.ts) - a user
+// can un-skip something back to PENDING, but can never directly claim BLOCKED.
+export const updateActionStatusSchema = z.object({
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED']),
+});

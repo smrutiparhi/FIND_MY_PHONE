@@ -243,8 +243,10 @@ to hang a check on - so a user removed directly via the Supabase dashboard
 ### Append-only history over mutable single rows
 
 `incident_assessments` never updates a row in place - the Recovery Decision
-Engine (Part 6) inserts a new row every time it recalculates, so a case's
-risk trajectory over time stays fully auditable.
+Engine (Part 6) inserts a new row whenever a recalculation actually changes
+the computed risk level or reasons (not on every recalculation - most just
+re-order/unblock actions with the risk unchanged), so a case's risk
+trajectory over time stays fully auditable without a row per no-op run.
 `recovery_cases.risk_level` is a denormalized cache of the latest
 assessment, kept in sync by the service layer, so dashboard reads (Part 4/17)
 don't need to join assessment history. The same pattern applies to

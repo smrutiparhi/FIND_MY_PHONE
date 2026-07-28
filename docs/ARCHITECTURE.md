@@ -162,28 +162,40 @@ no policies) on every table, to close off Supabase's auto-generated public REST 
 `DATABASE.md` for why this is a different concern from the ownership scoping above, not a
 replacement for it.
 
-## Initial risk assessment (Part 5) vs. the Recovery Decision Engine (Part 6)
+## The Recovery Decision Engine (Part 6)
 
-The wizard (`POST /api/recovery-cases`) has to produce *some* risk level and *some* ordered
-recovery actions the moment a case is created - the dashboard and the case itself need those
-fields to exist. But the master spec puts the real, authoritative logic in its own dedicated
-Part 6 ("the most important engineering part"): a deterministic rule set over a much larger
-input space than the wizard alone provides - device-secured / SIM-secured / police-report-status
-/ CEIR-status, time-since-incident, dependency-aware blocking, warnings, and recalculation every
-time an action's state changes. None of that state exists yet at case-creation time; only the
-wizard's ten answers do.
+`services/recoveryEngine/evaluateRecoveryDecision.ts` is the master spec's "most important
+engineering part": a pure, deterministic function - no database, clock, or LLM call inside it -
+over the spec's full 17-dimension input space (incidentType, timeSinceIncident, platform,
+accountAccess, simAccess, screenLockStatus, deviceFindingAvailability, locationStatus,
+financialAppsPresent, authenticatorPresent, passwordManagerPresent, workAccountPresent,
+deviceSecured, simSecured, financialAccountsSecured, policeReportStatus, ceirStatus), returning
+`{ riskLevel, riskReasons, orderedActions, currentRecommendedAction, blockedActions, warnings }`.
+See [`RECOVERY_ENGINE.md`](RECOVERY_ENGINE.md) for the full rule set, tier scheme, and how it
+reproduces the master spec's own worked examples exactly.
 
-`services/wizardAssessment/computeInitialAssessment.ts` is therefore explicitly scoped as
-**provisional**: a scoring function and action-generation decision tree over just those ten
-answers, documented in its own header as something Part 6 replaces. `createRecoveryCaseFromWizard.ts`
-(the transactional service that creates the device/case/assessment/actions/timeline-events
-together) calls it through a narrow interface - `{ riskLevel, riskReasons, actions }` - so
-swapping in the real engine later only touches that one file, not the wizard, the route, or the
-transaction logic around it. It was verified against the master spec's own worked examples
-(LOST+finding-available → Locate/Ring/Nearby-Search; STOLEN+account-access → Locate/Secure/SIM/
-Police/CEIR; STOLEN+no-account-access+SIM-lost → SIM/Account-Recovery(depends on SIM)/Police/CEIR;
-and the "STOLEN + banking apps + unlocked device → financial protection becomes extremely high
-priority" rule) end to end against a real Supabase project.
+Two builders turn real state into that input without adding any new columns:
+`buildEngineInputForNewCase.ts` reads the wizard's ten answers directly (nothing else exists yet
+for a brand-new case); `gatherEngineInputForExistingCase.ts` reads a case's live state for
+recalculation - critically, `deviceSecured` / `simSecured` / `financialAccountsSecured` /
+`accountAccess` are *derived*, not stored: "has the device been secured" is read back from
+whether the `SECURE_DEVICE` recovery action is `COMPLETED`, because that completion is what
+securing it means in this app. `applyEngineResult.ts` persists a result (creating new actions,
+updating existing ones' priority/status without ever touching IN_PROGRESS/COMPLETED/SKIPPED
+rows, appending a new `IncidentAssessment` row only when risk actually changed) and is shared by
+both case creation and recalculation, so both paths write identically. `createRecoveryCaseFromWizard.ts`
+now calls this engine directly - the provisional Part 5 scoring function it originally called is
+gone.
+
+Recalculation - "whenever a recovery action changes state" - is a real, wired-up flow: `PATCH
+/api/recovery-cases/:caseId/actions/:actionId` updates one action's status, then re-runs the
+engine and persists the outcome; `GET /api/recovery-cases/:caseId/recovery-plan` does the same
+and returns the live plan, including `blockedActions`/`warnings`, which have no table of their
+own since they're a function of current state, not history worth persisting. Verified against the
+master spec's three worked examples plus 37 further scenarios (40 total,
+`tests/services/recoveryEngine.test.ts`) and end to end against a real Supabase project, including
+the full dependency-unblocking cascade (SIM → account recovery → device securing / device
+finding) and the resulting risk-level drop.
 
 ## Database access layer
 
@@ -205,7 +217,7 @@ today — it never calls a real model, returns a response explicitly flagged `is
 and prefixed `[DEMO AI PROVIDER]`, and requires no API key. Real providers (Anthropic, OpenAI)
 are added in Part 7 once the Recovery Agent has concrete prompts and tool definitions. Per the
 master spec, the AI layer may only ever *explain* a recommendation — the deterministic Recovery
-Decision Engine (Part 6) never depends on this interface and cannot be overridden by it.
+Decision Engine (see above) never depends on this interface and cannot be overridden by it.
 
 ## Mapping provider abstraction
 

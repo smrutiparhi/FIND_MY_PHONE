@@ -3,4 +3,5 @@ export * from './types/health';
 export * from './types/domain';
 export * from './types/dashboard';
 export * from './types/wizard';
+export * from './types/recoveryEngine';
 export * from './utils/brand';

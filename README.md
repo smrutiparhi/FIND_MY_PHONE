@@ -13,16 +13,27 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 6 — Recovery Decision Engine.** The master spec's "most important engineering part": a
+pure, deterministic rule engine (`services/recoveryEngine/evaluateRecoveryDecision.ts`) over the
+spec's full 17-dimension input space, reproducing its worked examples exactly — see
+[`docs/RECOVERY_ENGINE.md`](docs/RECOVERY_ENGINE.md) for the full rule set. It replaces Part 5's
+provisional scoring function everywhere: `createRecoveryCaseFromWizard.ts` now calls it directly
+at case creation, and two new endpoints wire up real recalculation — `PATCH
+/api/recovery-cases/:caseId/actions/:actionId` (update an action's status, then recalculate) and
+`GET /api/recovery-cases/:caseId/recovery-plan` (the live plan, including ephemeral
+`blockedActions`/`warnings`). Dependency-aware blocking (e.g. account recovery blocked until SIM
+protection completes) and risk-level recalculation are both verified end to end against a real
+Supabase project, on top of 40 unit test scenarios covering the spec's three worked examples plus
+edge cases. The AI layer (Part 7) will only ever explain this engine's output — it has no path to
+override `riskLevel`, `orderedActions`, or `blockedActions`.
+
 **Part 5 — Report lost/stolen wizard.** `/recovery/new` is a real, working 10-step incident
 wizard (what happened → device → when/where last seen → account access → SIM access → screen
 lock → sensitive apps → device-finding → review) that creates an actual case: `POST
-/api/recovery-cases` transactionally creates the device (or reuses an existing one), the case, a
-provisional risk assessment, an ordered set of recovery actions with dependencies, and the
-opening timeline events. The risk/action calculation is explicitly scoped as provisional — see
-"Initial risk assessment vs. the Recovery Decision Engine" in `docs/ARCHITECTURE.md` — Part 6
-replaces it with the master spec's full deterministic engine without touching the wizard itself.
-Redirects to the dashboard on success, where the new case now shows up as a real active case
-card.
+/api/recovery-cases` transactionally creates the device (or reuses an existing one), the case,
+and (as of Part 6) the real Recovery Decision Engine's risk assessment and ordered actions with
+dependencies, plus the opening timeline events. Redirects to the dashboard on success, where the
+new case now shows up as a real active case card.
 
 **Part 4 — Main dashboard.** The authenticated app shell: a responsive nav (Dashboard, My
 Devices, Recovery Cases, Evidence, Notifications, Settings — the five non-Dashboard items are

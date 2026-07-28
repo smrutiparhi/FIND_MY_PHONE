@@ -170,4 +170,31 @@ export class RecoveryActionRepository {
     const dependencies = await this.fetchDependencies([row.id]);
     return toRecoveryAction(row, dependencies.get(row.id) ?? []);
   }
+
+  /**
+   * The Recovery Decision Engine's own re-sequencing write (distinct from
+   * updateStatus, which is the user-facing "mark this action ..." endpoint).
+   * Only ever passed PENDING/BLOCKED for `status` - see
+   * ENGINE_CONTROLLED_STATUSES in evaluateRecoveryDecision.ts - so this never
+   * touches completed_at.
+   */
+  async updatePriorityAndStatus(
+    id: RecoveryActionId,
+    ownerUserId: UserId,
+    patch: { priority: number; status: RecoveryActionStatus },
+  ): Promise<RecoveryAction | null> {
+    const result = await this.db.query<RecoveryActionRow>(
+      `UPDATE recovery_actions ra SET
+         priority = $3,
+         status = $4::recovery_action_status
+       FROM recovery_cases rc
+       WHERE ra.id = $1 AND ra.case_id = rc.id AND rc.user_id = $2
+       RETURNING ra.*`,
+      [id, ownerUserId, patch.priority, patch.status],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const dependencies = await this.fetchDependencies([row.id]);
+    return toRecoveryAction(row, dependencies.get(row.id) ?? []);
+  }
 }

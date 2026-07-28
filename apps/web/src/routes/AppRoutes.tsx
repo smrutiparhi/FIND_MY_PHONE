@@ -11,6 +11,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
+import { NewRecoveryCasePage } from '../pages/wizard/NewRecoveryCasePage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -24,6 +25,10 @@ export function AppRoutes(): ReactElement {
         {/* /status is a diagnostics page from Parts 1 and 3 (API/DB/auth connectivity) - kept
             around unlisted (not in AppLayout's nav) since it's still useful for debugging. */}
         <Route path="/status" element={<HealthCheckPage />} />
+
+        {/* Standalone, full-screen (no nav chrome) - the master spec treats this as an
+            emergency-onboarding flow, so it gets the same distraction-free focus as auth pages. */}
+        <Route path="/recovery/new" element={<NewRecoveryCasePage />} />
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
@@ -60,15 +65,6 @@ export function AppRoutes(): ReactElement {
               <ComingSoonPage
                 title="Notifications"
                 description="In-app notifications are coming in a later part of RecoverAI."
-              />
-            }
-          />
-          <Route
-            path="/recovery/new"
-            element={
-              <ComingSoonPage
-                title="Report Lost or Stolen Phone"
-                description="The incident-reporting wizard is coming in the next part of RecoverAI."
               />
             }
           />

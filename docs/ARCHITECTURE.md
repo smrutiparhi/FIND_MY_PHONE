@@ -105,10 +105,11 @@ All routes are mounted under `/api`. Convention going forward:
 /api/health              liveness (Part 1)
 /api/health/ready        dependency readiness (Part 1)
 /api/auth/*              Part 3
-/api/recovery-cases      GET only so far (Part 4 - dashboard summaries); full CRUD in Part 5
-/api/devices/*           not built yet - Part 4 deliberately scoped "My Devices" as a nav
-                         placeholder rather than standalone CRUD; device creation happens inline
-                         in Part 5's incident wizard instead (see master spec step 2)
+/api/recovery-cases      GET (Part 4 - dashboard summaries), POST (Part 5 - incident wizard)
+/api/devices             GET only (Part 5 - the wizard's device picker); no POST/PATCH/DELETE -
+                         device creation happens inline in POST /api/recovery-cases instead
+                         (mode: 'new'), matching the wizard's own "select existing or add
+                         device" step. Standalone device management stays a nav placeholder.
 /api/recovery-cases/:id/location, /sim, /account-recovery, /financial, /police, /ceir, /evidence,
   /timeline                nested under the owning case (Parts 8–16)
 ```
@@ -160,6 +161,29 @@ application data outliving a deleted identity.
 no policies) on every table, to close off Supabase's auto-generated public REST API - see
 `DATABASE.md` for why this is a different concern from the ownership scoping above, not a
 replacement for it.
+
+## Initial risk assessment (Part 5) vs. the Recovery Decision Engine (Part 6)
+
+The wizard (`POST /api/recovery-cases`) has to produce *some* risk level and *some* ordered
+recovery actions the moment a case is created - the dashboard and the case itself need those
+fields to exist. But the master spec puts the real, authoritative logic in its own dedicated
+Part 6 ("the most important engineering part"): a deterministic rule set over a much larger
+input space than the wizard alone provides - device-secured / SIM-secured / police-report-status
+/ CEIR-status, time-since-incident, dependency-aware blocking, warnings, and recalculation every
+time an action's state changes. None of that state exists yet at case-creation time; only the
+wizard's ten answers do.
+
+`services/wizardAssessment/computeInitialAssessment.ts` is therefore explicitly scoped as
+**provisional**: a scoring function and action-generation decision tree over just those ten
+answers, documented in its own header as something Part 6 replaces. `createRecoveryCaseFromWizard.ts`
+(the transactional service that creates the device/case/assessment/actions/timeline-events
+together) calls it through a narrow interface - `{ riskLevel, riskReasons, actions }` - so
+swapping in the real engine later only touches that one file, not the wizard, the route, or the
+transaction logic around it. It was verified against the master spec's own worked examples
+(LOST+finding-available → Locate/Ring/Nearby-Search; STOLEN+account-access → Locate/Secure/SIM/
+Police/CEIR; STOLEN+no-account-access+SIM-lost → SIM/Account-Recovery(depends on SIM)/Police/CEIR;
+and the "STOLEN + banking apps + unlocked device → financial protection becomes extremely high
+priority" rule) end to end against a real Supabase project.
 
 ## Database access layer
 

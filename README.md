@@ -13,15 +13,24 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
-**Part 4 — Main dashboard.** The authenticated app shell is real: a responsive nav (Dashboard, My
+**Part 5 — Report lost/stolen wizard.** `/recovery/new` is a real, working 10-step incident
+wizard (what happened → device → when/where last seen → account access → SIM access → screen
+lock → sensitive apps → device-finding → review) that creates an actual case: `POST
+/api/recovery-cases` transactionally creates the device (or reuses an existing one), the case, a
+provisional risk assessment, an ordered set of recovery actions with dependencies, and the
+opening timeline events. The risk/action calculation is explicitly scoped as provisional — see
+"Initial risk assessment vs. the Recovery Decision Engine" in `docs/ARCHITECTURE.md` — Part 6
+replaces it with the master spec's full deterministic engine without touching the wizard itself.
+Redirects to the dashboard on success, where the new case now shows up as a real active case
+card.
+
+**Part 4 — Main dashboard.** The authenticated app shell: a responsive nav (Dashboard, My
 Devices, Recovery Cases, Evidence, Notifications, Settings — the five non-Dashboard items are
-honest "coming soon" placeholders until their own parts land), and a working `/dashboard` backed
-by `GET /api/recovery-cases`, which assembles each case's device, latest location, current
-recommended action, and security-progress counts in one query. Handles loading, error (with
-retry), empty, offline, and populated states. Settings has real sign-out and account deletion
-(moved here from the Part 3 diagnostics page, now at `/status`). There's no way to *create* a
-case yet — that's Part 5 (the incident wizard), which is also what will finally exercise the
-dashboard with real user-generated data end to end.
+honest "coming soon" placeholders until their own parts land), and `/dashboard` backed by `GET
+/api/recovery-cases`, which assembles each case's device, latest location, current recommended
+action, and security-progress counts in one query. Handles loading, error (with retry), empty,
+offline, and populated states. Settings has real sign-out and account deletion (moved here from
+the Part 3 diagnostics page, now at `/status`).
 
 Auth (Part 3): Supabase Auth wired up end to end — registration, login, logout, password reset,
 and session persistence all happen client-side via `supabase-js`; the backend verifies tokens via

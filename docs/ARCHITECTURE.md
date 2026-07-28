@@ -87,7 +87,9 @@ instead of scattered across controllers (explicit master-spec requirement).
 - **Routing**: `AppRoutes.tsx` holds the route table. `/login`, `/register`, `/forgot-password`,
   and `/reset-password` are public; everything else is nested under `<ProtectedRoute />`, which
   redirects to `/login` (preserving the attempted path in router state) when `useAuth()` has no
-  session (Part 3).
+  session (Part 3). Authenticated routes are further nested under `<AppLayout />` (Part 4), the
+  persistent shell with the master spec's six nav items - except `/status`, a Part 1/3 API+DB+auth
+  diagnostics page kept around unlisted for debugging, not part of the nav.
 - **API access**: a single `apiGet`/`apiClient` helper (`lib/apiClient.ts`) that unwraps the
   shared `ApiResponse<T>` envelope and throws a typed `ApiClientError` on failure, so components
   handle one error shape everywhere instead of parsing `fetch` responses ad hoc.
@@ -103,8 +105,10 @@ All routes are mounted under `/api`. Convention going forward:
 /api/health              liveness (Part 1)
 /api/health/ready        dependency readiness (Part 1)
 /api/auth/*              Part 3
-/api/devices/*           Part 2 + Part 4
-/api/recovery-cases/*    Part 2, 5, 17
+/api/recovery-cases      GET only so far (Part 4 - dashboard summaries); full CRUD in Part 5
+/api/devices/*           not built yet - Part 4 deliberately scoped "My Devices" as a nav
+                         placeholder rather than standalone CRUD; device creation happens inline
+                         in Part 5's incident wizard instead (see master spec step 2)
 /api/recovery-cases/:id/location, /sim, /account-recovery, /financial, /police, /ceir, /evidence,
   /timeline                nested under the owning case (Parts 8–16)
 ```

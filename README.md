@@ -13,13 +13,20 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
-**Part 3 — Authentication.** Real Supabase Auth wired up end to end: registration, login,
-logout, password reset, and session persistence all happen client-side via `supabase-js`
-(`apps/web/src/lib/supabaseClient.ts`); the backend verifies tokens via `requireAuth`
-(`apps/api/src/middleware/authenticate.ts`) and never sees a password. Row-level security is
-enabled (default-deny) on every table. `DATABASE_URL` now points at Supabase's managed Postgres
-rather than a local container — see "Database setup" below. No recovery-case functionality
-exists yet — that starts in Part 4 (Dashboard).
+**Part 4 — Main dashboard.** The authenticated app shell is real: a responsive nav (Dashboard, My
+Devices, Recovery Cases, Evidence, Notifications, Settings — the five non-Dashboard items are
+honest "coming soon" placeholders until their own parts land), and a working `/dashboard` backed
+by `GET /api/recovery-cases`, which assembles each case's device, latest location, current
+recommended action, and security-progress counts in one query. Handles loading, error (with
+retry), empty, offline, and populated states. Settings has real sign-out and account deletion
+(moved here from the Part 3 diagnostics page, now at `/status`). There's no way to *create* a
+case yet — that's Part 5 (the incident wizard), which is also what will finally exercise the
+dashboard with real user-generated data end to end.
+
+Auth (Part 3): Supabase Auth wired up end to end — registration, login, logout, password reset,
+and session persistence all happen client-side via `supabase-js`; the backend verifies tokens via
+`requireAuth` and never sees a password. Row-level security is enabled (default-deny) on every
+table. `DATABASE_URL` points at Supabase's managed Postgres — see "Database setup" below.
 
 ## Monorepo layout
 

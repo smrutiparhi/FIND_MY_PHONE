@@ -1,14 +1,19 @@
 import type {
   CaseStatus,
+  DashboardCaseSummary,
   DeviceId,
   IncidentType,
+  LocationSource,
+  PlatformType,
   RecoveryActionId,
+  RecoveryActionType,
   RecoveryCase,
   RecoveryCaseId,
   RiskLevel,
   SimAccessStatus,
   TriStateAnswer,
   UserId,
+  VerificationStatus,
 } from '@recoverai/shared';
 import type { Queryable } from '../queryable';
 
@@ -52,6 +57,60 @@ function toRecoveryCase(row: RecoveryCaseRow): RecoveryCase {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     closedAt: row.closed_at,
+  };
+}
+
+interface DashboardCaseSummaryRow {
+  case_id: string;
+  incident_type: IncidentType;
+  status: CaseStatus;
+  risk_level: RiskLevel | null;
+  updated_at: string;
+  device_id: string;
+  device_nickname: string;
+  device_manufacturer: string;
+  device_model: string;
+  device_platform: PlatformType;
+  last_location_observed_at: string | null;
+  last_location_source: LocationSource | null;
+  last_location_verification_status: VerificationStatus | null;
+  recommended_action_id: string | null;
+  recommended_action_type: RecoveryActionType | null;
+  recommended_action_title: string | null;
+  actions_total: string;
+  actions_completed: string;
+}
+
+function toDashboardCaseSummary(row: DashboardCaseSummaryRow): DashboardCaseSummary {
+  return {
+    caseId: row.case_id as RecoveryCaseId,
+    incidentType: row.incident_type,
+    status: row.status,
+    riskLevel: row.risk_level,
+    updatedAt: row.updated_at,
+    device: {
+      id: row.device_id as DeviceId,
+      nickname: row.device_nickname,
+      manufacturer: row.device_manufacturer,
+      model: row.device_model,
+      platform: row.device_platform,
+    },
+    location: {
+      lastObservedAt: row.last_location_observed_at,
+      source: row.last_location_source,
+      verificationStatus: row.last_location_verification_status,
+    },
+    currentRecommendedAction: row.recommended_action_id
+      ? {
+          id: row.recommended_action_id as RecoveryActionId,
+          type: row.recommended_action_type as RecoveryActionType,
+          title: row.recommended_action_title as string,
+        }
+      : null,
+    securityProgress: {
+      completedActions: Number(row.actions_completed),
+      totalActions: Number(row.actions_total),
+    },
   };
 }
 
@@ -170,6 +229,56 @@ export class RecoveryCaseRepository {
     );
     const row = result.rows[0];
     return row ? toRecoveryCase(row) : null;
+  }
+
+  /**
+   * The read-optimized view the dashboard (Part 4) renders directly - one
+   * joined query per request instead of the frontend (or this repository)
+   * stitching together separate device/location/action fetches per case.
+   * Active cases first (per Part 4 dashboard requirement), most recently
+   * updated first within each group.
+   */
+  async listDashboardSummariesByUser(ownerUserId: UserId): Promise<DashboardCaseSummary[]> {
+    const result = await this.db.query<DashboardCaseSummaryRow>(
+      `SELECT
+         rc.id AS case_id,
+         rc.incident_type,
+         rc.status,
+         rc.risk_level,
+         rc.updated_at,
+         d.id AS device_id,
+         d.nickname AS device_nickname,
+         d.manufacturer AS device_manufacturer,
+         d.model AS device_model,
+         d.platform AS device_platform,
+         loc.observed_at AS last_location_observed_at,
+         loc.source AS last_location_source,
+         loc.verification_status AS last_location_verification_status,
+         ra.id AS recommended_action_id,
+         ra.type AS recommended_action_type,
+         ra.title AS recommended_action_title,
+         COALESCE(action_counts.total, 0) AS actions_total,
+         COALESCE(action_counts.completed, 0) AS actions_completed
+       FROM recovery_cases rc
+       JOIN devices d ON d.id = rc.device_id
+       LEFT JOIN LATERAL (
+         SELECT observed_at, source, verification_status
+         FROM location_observations
+         WHERE case_id = rc.id
+         ORDER BY observed_at DESC
+         LIMIT 1
+       ) loc ON true
+       LEFT JOIN recovery_actions ra ON ra.id = rc.current_recommended_action_id
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE status = 'COMPLETED') AS completed
+         FROM recovery_actions
+         WHERE case_id = rc.id
+       ) action_counts ON true
+       WHERE rc.user_id = $1
+       ORDER BY (rc.status = ANY($2::case_status[])) ASC, rc.updated_at DESC`,
+      [ownerUserId, TERMINAL_STATUSES],
+    );
+    return result.rows.map(toDashboardCaseSummary);
   }
 
   async setCurrentRecommendedAction(

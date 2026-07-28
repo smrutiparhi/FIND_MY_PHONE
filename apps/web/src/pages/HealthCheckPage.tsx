@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactElement } from 'react';
+import { Link } from 'react-router-dom';
 import type { HealthCheckResponse, ReadinessCheckResponse, User } from '@recoverai/shared';
 import { ApiClientError, apiGet } from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
@@ -75,17 +76,22 @@ export function HealthCheckPage(): ReactElement {
             <p className="text-sm font-medium tracking-wide text-sky-400 uppercase">RecoverAI</p>
             <h1 className="text-2xl font-semibold text-white">System status</h1>
             <p className="text-sm text-slate-400">
-              Signed in as {user?.email}. This placeholder page confirms auth and the backend
-              connection work end to end - the real dashboard is built in Part 4.
+              Signed in as {user?.email}. Diagnostics page confirming the API, database, and auth
+              session all work end to end - not part of the main navigation.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void signOut()}
-            className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
-          >
-            Sign out
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <Link to="/" className="text-sm font-medium text-sky-400 hover:text-sky-300">
+              Back to dashboard
+            </Link>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
         <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">

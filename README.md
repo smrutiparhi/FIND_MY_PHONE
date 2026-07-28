@@ -13,10 +13,13 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
-**Part 2 — Database.** The full PostgreSQL schema (14 migrations, 12 core entities), a
-repository layer with ownership scoping baked into every query, IMEI/serial encryption, demo
-seed data, and 62 tests run against a real Postgres instance. No user-facing recovery-case
-functionality exists yet — that starts in Part 3 (Authentication) and Part 4 (Dashboard).
+**Part 3 — Authentication.** Real Supabase Auth wired up end to end: registration, login,
+logout, password reset, and session persistence all happen client-side via `supabase-js`
+(`apps/web/src/lib/supabaseClient.ts`); the backend verifies tokens via `requireAuth`
+(`apps/api/src/middleware/authenticate.ts`) and never sees a password. Row-level security is
+enabled (default-deny) on every table. `DATABASE_URL` now points at Supabase's managed Postgres
+rather than a local container — see "Database setup" below. No recovery-case functionality
+exists yet — that starts in Part 4 (Dashboard).
 
 ## Monorepo layout
 
@@ -61,31 +64,43 @@ optional until the parts that use them (AI Recovery Agent: Part 7, Device Locati
 `/api/health/ready` reports each dependency's status honestly (e.g. `database: "not_configured"`)
 rather than pretending they're connected.
 
-## Database setup
+## Database + Auth setup (Supabase)
 
-Any Postgres works — a disposable local one is easiest for development:
+Since Part 3, the recommended setup is a free [Supabase](https://supabase.com) project - it
+provides both the managed Postgres database and the managed Auth backend this app relies on
+(see "Why Supabase for auth" below).
 
-```bash
-docker run -d --name recoverai-postgres \
-  -e POSTGRES_USER=recoverai -e POSTGRES_PASSWORD=recoverai_dev_only -e POSTGRES_DB=recoverai \
-  -p 55432:5432 postgres:16-alpine
-```
+1. Create a project at [supabase.com](https://supabase.com/dashboard) (free tier).
+2. From **Project Settings → API**, copy the **Project URL**, **anon public** key, and
+   **service_role** key.
+3. From **Project Settings → Database → Connection string**, switch to **Session pooler** mode
+   (not "Direct connection" - that needs IPv6, which most networks don't have) and copy the URI,
+   substituting in your real database password.
+4. Fill in `apps/api/.env`:
+   ```
+   DATABASE_URL=<session pooler URI, with your password substituted in>
+   ENCRYPTION_KEY=<output of: openssl rand -base64 32>
+   SUPABASE_URL=<project URL>
+   SUPABASE_SERVICE_ROLE_KEY=<service_role key - backend only, never in apps/web>
+   ```
+5. Fill in `apps/web/.env`:
+   ```
+   VITE_SUPABASE_URL=<same project URL>
+   VITE_SUPABASE_ANON_KEY=<anon public key - safe for the browser, see docs/DATABASE.md>
+   ```
+6. Run:
+   ```bash
+   npm run db:migrate -w apps/api   # applies every migration, including RLS + auth-sync (Part 3)
+   npm run db:seed -w apps/api      # two fictional demo users/cases - see docs/DATABASE.md
+   npm run test -w apps/api         # 62 tests against the real database above
+   ```
 
-Then in `apps/api/.env`:
-
-```
-DATABASE_URL=postgresql://recoverai:recoverai_dev_only@localhost:55432/recoverai
-ENCRYPTION_KEY=<output of: openssl rand -base64 32>
-```
-
-```bash
-npm run db:migrate -w apps/api   # applies every migration in apps/api/src/db/migrations
-npm run db:seed -w apps/api      # two fictional demo users/cases - see docs/DATABASE.md
-npm run test -w apps/api         # 62 tests against the real database above
-```
+The schema itself stays portable to a self-hosted Postgres (`DATABASE_URL` is just a connection
+string), but Supabase Auth specifically requires a Supabase-managed project - there's no
+self-hosted equivalent this app wires up.
 
 See [`docs/DATABASE.md`](docs/DATABASE.md) for the schema, an ER diagram, and the design
-rationale (encryption, ownership scoping, cascade rules).
+rationale (encryption, ownership scoping, cascade rules, row-level security).
 
 ## Scripts
 
@@ -109,10 +124,10 @@ that only become required in a later part (clearly commented with which part int
 Never commit a real `.env` file — `.gitignore` already excludes it.
 
 - `apps/api/.env.example` — server port, CORS origin, log level, database connection string and
-  encryption key (Part 2), Supabase project (Part 3 — see Auth architecture note below), AI
+  encryption key (Part 2), Supabase project (Part 3 — see "Why Supabase for auth" below), AI
   provider (Part 7), map provider (Part 8).
-- `apps/web/.env.example` — API base URL. Only `VITE_`-prefixed variables are ever exposed to the
-  browser; never put secrets here.
+- `apps/web/.env.example` — API base URL, Supabase project URL and anon key (Part 3). Only
+  `VITE_`-prefixed variables are ever exposed to the browser; never put secrets here.
 
 ### Why Supabase for auth
 
@@ -120,9 +135,17 @@ The master spec explicitly says: "Do not build custom authentication where a con
 authentication provider already safely handles the responsibility." RecoverAI stores sensitive
 recovery data (device identifiers, incident details, evidence); hand-rolling password hashing,
 session management, and account-recovery flows is exactly the kind of risk a managed provider
-exists to remove. Part 3 wires up Supabase Auth on both frontend and backend. The database layer
-itself only needs a standard `DATABASE_URL` connection string, so it works identically whether
-Postgres is Supabase-managed or self-hosted.
+exists to remove.
+
+Credentials never reach this app's own backend: the frontend talks to Supabase directly via
+`supabase-js` for registration, login, logout, and password reset (Supabase's own hosted email
+service sends the verification/reset emails - no email infrastructure of our own). The backend's
+only job is verifying an already-issued token (`requireAuth`) and the one operation that genuinely
+needs backend privileges: account deletion, which uses the service-role admin API to remove the
+Supabase identity itself. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design,
+including a real gotcha this project hit and worked around: Supabase's Auth service writes to its
+`auth.users` table in a way that ordinary database triggers don't fire for, so the app relies on
+an idempotent upsert in `requireAuth` instead of the trigger originally written for this.
 
 ## Code quality
 

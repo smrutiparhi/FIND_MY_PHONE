@@ -1,5 +1,7 @@
 export interface ClientEnv {
   apiBaseUrl: string;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
 }
 
 function readApiBaseUrl(): string {
@@ -13,6 +15,18 @@ function readApiBaseUrl(): string {
   return value;
 }
 
+function readRequired(name: 'VITE_SUPABASE_URL' | 'VITE_SUPABASE_ANON_KEY'): string {
+  const value = import.meta.env[name];
+  if (!value) {
+    throw new Error(
+      `${name} must be set - see apps/web/.env.example. Authentication cannot work without it.`,
+    );
+  }
+  return value;
+}
+
 export const clientEnv: ClientEnv = {
   apiBaseUrl: readApiBaseUrl(),
+  supabaseUrl: readRequired('VITE_SUPABASE_URL'),
+  supabaseAnonKey: readRequired('VITE_SUPABASE_ANON_KEY'),
 };

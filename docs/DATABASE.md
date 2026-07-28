@@ -167,13 +167,27 @@ against a real Postgres instance: a second "stranger" user is created, and
 every read/update/delete method is asserted to refuse them exactly as if the
 resource didn't exist.
 
-Postgres row-level security (`RLS`) was deliberately **not** added in Part 2.
-RLS earns its keep when clients query Postgres directly (e.g. through
-Supabase's client SDK); this app's browser never talks to Postgres except
-through the Express API, so RLS here would be inert defense-in-depth with no
-session context to key off until Part 3's auth pipeline exists to set it.
-Revisit in Part 20 (Security hardening) once there's a natural place to
-`SET LOCAL` the authenticated user id per request.
+Postgres row-level security (`RLS`) was deliberately **not** added in Part 2,
+reasoning that this app's browser never talks to Postgres except through the
+Express API, so per-row RLS *policies* would be inert defense-in-depth with
+no session context to key off until Part 3's auth pipeline exists.
+
+Part 3 revisited this, but landed somewhere more specific than "add
+policies": once `DATABASE_URL` points at a real Supabase project (Part 3's
+setup), that Postgres instance auto-exposes every `public` schema table over
+a REST API (PostgREST), reachable with the project's `anon` key - which is
+not a secret, it ships inside the frontend's JS bundle by design. Without
+RLS, anyone could extract that key and query e.g. `/rest/v1/devices`
+directly, bypassing this app's Express backend and its ownership-scoped
+repository methods entirely. Migration `0016_enable_row_level_security.sql`
+enables RLS with **zero policies** on every table - a blanket default-deny
+that locks PostgREST out completely, since only a table's owner (or a role
+with `BYPASSRLS`) can read through RLS with no policies, and this app's own
+`DATABASE_URL` connects as exactly that owning role. Fine-grained per-row
+*policies* remain unnecessary for the reason originally given: the only
+client that's supposed to read this data is the Express API, which bypasses
+RLS entirely by virtue of the role it connects as, not by a policy granting
+it access.
 
 ### Encryption vs. masking
 
@@ -193,6 +207,38 @@ Two different strategies for two different sensitivity profiles:
 
 `ENCRYPTION_KEY` (32 bytes, base64) is required to create a device with
 IMEI/serial values; see `apps/api/.env.example`.
+
+### Supabase Auth sync
+
+`public.users` still has no foreign key to `auth.users` (see 0003_users.sql)
+- this schema stays portable to a self-hosted Postgres that has no `auth`
+schema at all. `0015_supabase_auth_sync.sql` adds triggers on `auth.users`
+(INSERT, UPDATE OF email, DELETE) to keep the two in sync, guarded by an
+existence check so the migration is a safe no-op on any Postgres that isn't
+Supabase-managed.
+
+**These triggers turned out to be best-effort, not what this app actually
+relies on.** Verified empirically against a real Supabase project: a real
+sign-up through `supabase-js` never produced a matching `public.users` row,
+while manually re-running the identical `INSERT` outside the trigger worked
+immediately - Supabase's Auth service writes to `auth.users` in a way that
+default-firing ("origin") triggers don't run for. The standard fix,
+`ALTER TABLE auth.users ENABLE ALWAYS TRIGGER ...`, isn't available to this
+app: the connecting Postgres role doesn't *own* `auth.users`
+(`supabase_auth_admin` does), and that `ALTER` requires ownership, not just
+the `TRIGGER` privilege `CREATE TRIGGER` itself needed.
+
+The INSERT/UPDATE cases are instead handled reliably at the application
+layer: `UserRepository.syncFromAuth()` upserts `public.users` on **every**
+authenticated request, called from `requireAuth`
+(`middleware/authenticate.ts`) before any ownership-scoped repository call
+that would otherwise fail its foreign key. The DB triggers are left in place
+as a harmless bonus in case they ever do fire (a future Supabase change, or
+a self-hosted Supabase stack). The DELETE case has no equivalent
+application-layer fallback - there's no future request from a deleted user
+to hang a check on - so a user removed directly via the Supabase dashboard
+(bypassing this app's own account-deletion endpoint) may leave a stale
+`public.users` row behind if that trigger doesn't fire either.
 
 ### Append-only history over mutable single rows
 

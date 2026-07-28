@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import type { HealthCheckResponse, ReadinessCheckResponse } from '@recoverai/shared';
+import type { HealthCheckResponse, ReadinessCheckResponse, User } from '@recoverai/shared';
 import { ApiClientError, apiGet } from '../lib/apiClient';
+import { useAuth } from '../hooks/useAuth';
 
 type LoadState<T> =
   { status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; message: string };
@@ -27,10 +28,12 @@ function StatusDot({ tone }: { tone: 'ok' | 'error' | 'pending' | 'warn' }): Rea
 }
 
 export function HealthCheckPage(): ReactElement {
+  const { user, signOut } = useAuth();
   const [liveness, setLiveness] = useState<LoadState<HealthCheckResponse>>({ status: 'loading' });
   const [readiness, setReadiness] = useState<LoadState<ReadinessCheckResponse>>({
     status: 'loading',
   });
+  const [profile, setProfile] = useState<LoadState<User>>({ status: 'loading' });
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +54,14 @@ export function HealthCheckPage(): ReactElement {
         if (!cancelled) setReadiness({ status: 'error', message: describeError(err) });
       });
 
+    apiGet<User>('/api/auth/me')
+      .then((data) => {
+        if (!cancelled) setProfile({ status: 'success', data });
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setProfile({ status: 'error', message: describeError(err) });
+      });
+
     return () => {
       cancelled = true;
     };
@@ -59,14 +70,46 @@ export function HealthCheckPage(): ReactElement {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 text-slate-100">
       <div className="w-full max-w-lg space-y-6">
-        <header className="space-y-1">
-          <p className="text-sm font-medium tracking-wide text-sky-400 uppercase">RecoverAI</p>
-          <h1 className="text-2xl font-semibold text-white">System status</h1>
-          <p className="text-sm text-slate-400">
-            Part 1 architecture scaffold. This page confirms the frontend can reach the backend API
-            - the real dashboard is built in Part 4.
-          </p>
+        <header className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-sm font-medium tracking-wide text-sky-400 uppercase">RecoverAI</p>
+            <h1 className="text-2xl font-semibold text-white">System status</h1>
+            <p className="text-sm text-slate-400">
+              Signed in as {user?.email}. This placeholder page confirms auth and the backend
+              connection work end to end - the real dashboard is built in Part 4.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
+          >
+            Sign out
+          </button>
         </header>
+
+        <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+          <h2 className="mb-3 text-sm font-semibold text-slate-200">Your account</h2>
+          {profile.status === 'loading' && (
+            <p className="flex items-center gap-2 text-sm text-slate-400">
+              <StatusDot tone="pending" /> Loading profile...
+            </p>
+          )}
+          {profile.status === 'error' && (
+            <p className="flex items-center gap-2 text-sm text-red-400">
+              <StatusDot tone="error" /> Could not load your profile: {profile.message}
+            </p>
+          )}
+          {profile.status === 'success' && (
+            <div className="space-y-1 text-sm text-slate-300">
+              <p className="flex items-center gap-2">
+                <StatusDot tone="ok" /> Backend recognizes this session (GET /api/auth/me)
+              </p>
+              <p className="text-slate-500">User id: {profile.data.id}</p>
+              <p className="text-slate-500">Email: {profile.data.email}</p>
+            </div>
+          )}
+        </section>
 
         <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">API liveness</h2>

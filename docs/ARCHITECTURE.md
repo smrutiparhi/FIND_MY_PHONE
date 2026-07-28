@@ -72,19 +72,22 @@ instead of scattered across controllers (explicit master-spec requirement).
   covering auth headers, cookies, and common secret field names. Part 20 (Security hardening)
   extends the redaction list as IMEI, precise-location, and financial fields are introduced.
 - **Validation strategy**: `zod` schemas, applied via a generic `validate(schema, target)`
-  middleware factory. No route needs input validation yet (health check takes none) — the
-  mechanism exists so Part 3 onward has one consistent pattern instead of ad hoc checks inside
-  controllers.
+  middleware factory - `PATCH /api/auth/me`'s `updateProfileSchema` (Part 3) is the first route to
+  use it; every input-bearing route from here on follows the same pattern instead of ad hoc checks
+  inside controllers.
 - **Rate limiting**: a generous app-wide baseline (`express-rate-limit`) so nothing is ever
-  completely unprotected; Part 3 adds a strict limiter specifically on auth endpoints
-  (brute-force / enumeration protection).
+  completely unprotected. No stricter *auth-specific* limiter was added on top of it: credentials
+  never reach this backend (see "Authentication architecture"), so there's no login/signup
+  endpoint here to brute-force in the first place - that protection lives on Supabase's side.
 
 ## Frontend architecture
 
 - **Framework**: React 19 + TypeScript + Vite 6 + Tailwind CSS 4 (`@tailwindcss/vite`, no
   separate `tailwind.config.js`/PostCSS config needed for v4's Vite plugin) + React Router 7.
-- **Routing**: `AppRoutes.tsx` holds the route table. Route guards / auth-aware routing land in
-  Part 3.
+- **Routing**: `AppRoutes.tsx` holds the route table. `/login`, `/register`, `/forgot-password`,
+  and `/reset-password` are public; everything else is nested under `<ProtectedRoute />`, which
+  redirects to `/login` (preserving the attempted path in router state) when `useAuth()` has no
+  session (Part 3).
 - **API access**: a single `apiGet`/`apiClient` helper (`lib/apiClient.ts`) that unwraps the
   shared `ApiResponse<T>` envelope and throws a typed `ApiClientError` on failure, so components
   handle one error shape everywhere instead of parsing `fetch` responses ad hoc.
@@ -112,14 +115,47 @@ Every response body — success or error — uses the shared envelope from `pack
 { success: true, data: T } | { success: false, error: { code, message, details? } }
 ```
 
-## Authentication architecture (decision made now, implemented in Part 3)
+## Authentication architecture
 
 Supabase Auth, per the master spec's explicit instruction not to hand-roll authentication where a
-managed provider already safely handles it. The frontend will use `@supabase/supabase-js` for
-sign-in/sign-up flows; the backend verifies the Supabase-issued JWT on protected routes and uses
-it to resolve the authenticated user id for row-ownership checks. `SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY` are already reserved in `apps/api/.env.example` (server-only, never
-exposed to the frontend).
+managed provider already safely handles it.
+
+**Credentials never touch the Express backend.** The frontend's `lib/supabaseClient.ts` is the
+only place that talks to Supabase directly - registration, login, logout, password reset request/
+confirmation, and session persistence (including token auto-refresh) all go through
+`@supabase/supabase-js`, using the `anon` key. Email verification and password-reset emails are
+Supabase's own hosted feature (configured in the Supabase dashboard, not built by this app) -
+this is what the master spec's "email verification architecture" and "forgot password" ask for
+without requiring any email-sending infrastructure of our own. Because auth requests never reach
+our backend, our `express-rate-limit` baseline never sees them either; Supabase's platform rate-
+limits and brute-force-protects its own Auth API, which is exactly what "use a managed provider"
+is supposed to buy.
+
+**The backend's only job is verifying already-issued tokens.** `middleware/authenticate.ts`'s
+`requireAuth` extracts the `Authorization: Bearer <token>` header and calls Supabase's
+`auth.getUser(token)` (via `lib/supabaseAdmin.ts`, service-role key, server-only) rather than
+decoding the JWT locally - a revoked/signed-out session is rejected immediately instead of
+staying valid until it expires. On success it sets `req.user = { id, email }`, which every
+protected route and repository call downstream uses for ownership scoping (Part 2 already built
+every repository method to take an owner id; Part 3 is what actually supplies one).
+
+**`public.users` sync**: since credentials/signup flow through Supabase directly, not through a
+backend registration endpoint, something has to create the matching `public.users` row.
+`requireAuth` does this on every authenticated request via `UserRepository.syncFromAuth()` - an
+idempotent upsert, not a DB trigger. A trigger (`0015_supabase_auth_sync.sql`) exists too but
+turned out to be unreliable in practice; see `DATABASE.md` for why and what actually works.
+
+**Account deletion** (`DELETE /api/auth/account`) is the one identity-related operation that does
+require the backend: it needs the service-role admin API to delete the actual Supabase identity,
+which the `anon` key can't do. It deletes application data first (cascading through the whole
+schema - see `DATABASE.md`), then the Supabase identity, in that order deliberately: if the
+second step fails, the user is left with an empty, harmless Supabase account rather than
+application data outliving a deleted identity.
+
+**Row-level security**: adopting real Supabase in Part 3 also meant enabling RLS (default-deny,
+no policies) on every table, to close off Supabase's auto-generated public REST API - see
+`DATABASE.md` for why this is a different concern from the ownership scoping above, not a
+replacement for it.
 
 ## Database access layer
 
@@ -165,12 +201,17 @@ integration confirms it or the user confirms completion.
 ## Security architecture (baseline now, hardened per-part and again in Part 20)
 
 Already in place: `helmet` security headers, CORS restricted to `WEB_ORIGIN`, strict TypeScript,
-a Zod validation pattern ready for input-bearing routes, structured logging with secret
-redaction, a baseline rate limiter, and (Part 2) ownership-scoped repository methods for every
-entity plus AES-256-GCM encryption for IMEI/serial fields - see `DATABASE.md`. Auth-specific rate
-limiting, route-level authorization (there are no routes yet to protect), IDOR/XSS/CSRF/SSRF/
-file-upload hardening, and a full threat model arrive alongside the features they protect (Parts
-3, 15, 20).
+a Zod validation pattern for input-bearing routes, structured logging with secret redaction, a
+baseline rate limiter, ownership-scoped repository methods for every entity plus AES-256-GCM
+encryption for IMEI/serial fields (Part 2), and (Part 3) token-based authentication via
+`requireAuth` plus RLS default-deny on every table - see `DATABASE.md` for the row-level-security
+reasoning and the "Authentication architecture" section above for why auth-specific *rate*
+limiting is intentionally absent from this app's own Express layer (credentials never reach it;
+Supabase's platform rate-limits its own Auth API). Route-level authorization for concrete
+resources (devices, cases, ...) lands in Part 4 alongside the first routes that need it -
+`req.user.id` from `requireAuth` is the mechanism, already wired through to every repository
+method. IDOR/XSS/CSRF/SSRF/file-upload hardening and a full threat model arrive alongside the
+features they protect (Parts 15, 20).
 
 ## Environment configuration
 

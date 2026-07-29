@@ -77,9 +77,20 @@ export function RecoveryCaseDetailPage(): ReactElement {
 
   const { recoveryCase, device, recoveryPlan } = state;
   const caseIdTyped = recoveryCase.id as RecoveryCaseId;
+  const isEmergency = recoveryCase.riskLevel === 'CRITICAL' || recoveryCase.riskLevel === 'HIGH';
 
   return (
     <div className="space-y-6">
+      {isEmergency ? (
+        <Link
+          to={`/recovery-cases/${recoveryCase.id}/emergency`}
+          className="flex items-center justify-between gap-3 rounded-lg border border-red-800 bg-red-950 px-4 py-3 text-sm font-semibold text-red-200 hover:bg-red-900"
+        >
+          <span>This case is high risk - open the focused emergency view for just the next critical step.</span>
+          <span aria-hidden="true">&rarr;</span>
+        </Link>
+      ) : null}
+
       <div>
         <Link to="/" className="text-xs text-slate-500 hover:text-slate-300">
           &larr; Back to dashboard

@@ -284,6 +284,18 @@ completes the case's `ACCOUNT_RECOVERY` action, and re-runs `recalculateRecovery
 same `accountAccessStatus` override mechanism Part 7's Recovery Agent uses. See
 [`ACCOUNT_RECOVERY.md`](ACCOUNT_RECOVERY.md) for the full design.
 
+## Emergency Recovery Mode (Part 10)
+
+A focused, single-action view for high-risk cases, deliberately carrying no new risk-detection logic
+of its own: `services/emergencyMode/deriveEmergencyModeState.ts` defines "emergency" as
+`riskLevel === 'CRITICAL' || 'HIGH'`, reusing the Recovery Decision Engine's own output rather than
+re-scoring the master spec's listed trigger conditions (stolen, account/SIM inaccessible, financial
+apps present, ...) a second time. The API response has no field for the full action list at all —
+only `completedCount`/`totalCount` (a progress number) plus exactly `currentAction` and `nextAction`
+— so "do not display a huge checklist during emergency mode" is structural, not just a frontend
+choice. Renders standalone (`/recovery-cases/:caseId/emergency`, no nav chrome), the same treatment
+as the incident wizard. See [`EMERGENCY_MODE.md`](EMERGENCY_MODE.md) for the full design.
+
 ## External-service abstraction
 
 `services/external/ExternalServiceResult.ts` defines a discriminated union —

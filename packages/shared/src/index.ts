@@ -8,4 +8,5 @@ export * from './types/aiAgent';
 export * from './types/map';
 export * from './types/location';
 export * from './types/accountRecovery';
+export * from './types/emergencyMode';
 export * from './utils/brand';

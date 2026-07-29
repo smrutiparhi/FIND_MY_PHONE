@@ -13,6 +13,15 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 10 — Emergency Recovery Mode.** A focused, single-screen view (`/recovery-cases/:caseId/emergency`,
+standalone with no nav chrome) for cases the Recovery Decision Engine already rates `CRITICAL` or
+`HIGH` risk — no second risk-detection system, that one check *is* the master spec's trigger list
+(stolen, account/SIM inaccessible, financial apps present, ...). Shows the risk level, why it's high,
+a completed/total count, and exactly one current action plus a preview of what's next — never the
+full checklist; the API response has no field to carry one. Completing the current action requires
+an explicit two-step confirmation. A banner on the full case-detail page (Part 7) links in whenever a
+case is high-risk. See [`docs/EMERGENCY_MODE.md`](docs/EMERGENCY_MODE.md) for the full design.
+
 **Part 9 — Account Recovery Mode.** A guided flow (`/recovery-cases/:caseId/account-recovery`) for
 when the owner can't sign in to the Apple/Google account tied to their device. Asks only what the
 user still *has* (password, trusted device, recovery email, SIM, backup codes) — never the secret

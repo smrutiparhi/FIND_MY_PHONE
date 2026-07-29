@@ -15,6 +15,7 @@ import { NewRecoveryCasePage } from '../pages/wizard/NewRecoveryCasePage';
 import { RecoveryCaseDetailPage } from '../pages/RecoveryCaseDetailPage';
 import { RecoveryLocationPage } from '../pages/RecoveryLocationPage';
 import { AccountRecoveryPage } from '../pages/AccountRecoveryPage';
+import { EmergencyModePage } from '../pages/EmergencyModePage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -32,6 +33,10 @@ export function AppRoutes(): ReactElement {
         {/* Standalone, full-screen (no nav chrome) - the master spec treats this as an
             emergency-onboarding flow, so it gets the same distraction-free focus as auth pages. */}
         <Route path="/recovery/new" element={<NewRecoveryCasePage />} />
+
+        {/* Also standalone/no nav chrome - "Display a focused emergency interface... Do not
+            display a huge checklist during emergency mode" (master spec Part 10). */}
+        <Route path="/recovery-cases/:caseId/emergency" element={<EmergencyModePage />} />
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />

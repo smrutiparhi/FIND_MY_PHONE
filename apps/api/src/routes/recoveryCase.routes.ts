@@ -13,6 +13,7 @@ import {
 } from '../controllers/recoveryCase.controller';
 import { createLocationObservation, listLocationObservations } from '../controllers/location.controller';
 import { getAccountRecovery, patchAccountRecovery } from '../controllers/accountRecovery.controller';
+import { getEmergencyMode } from '../controllers/emergencyMode.controller';
 import {
   caseActionParamsSchema,
   caseIdParamsSchema,
@@ -74,4 +75,10 @@ recoveryCaseRouter.patch(
   validate(caseIdParamsSchema, 'params'),
   validate(updateAccountRecoveryAttemptSchema),
   asyncHandler(patchAccountRecovery),
+);
+recoveryCaseRouter.get(
+  '/:caseId/emergency',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  asyncHandler(getEmergencyMode),
 );

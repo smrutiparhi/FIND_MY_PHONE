@@ -7,4 +7,5 @@ export * from './types/recoveryEngine';
 export * from './types/aiAgent';
 export * from './types/map';
 export * from './types/location';
+export * from './types/accountRecovery';
 export * from './utils/brand';

@@ -13,6 +13,16 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 9 — Account Recovery Mode.** A guided flow (`/recovery-cases/:caseId/account-recovery`) for
+when the owner can't sign in to the Apple/Google account tied to their device. Asks only what the
+user still *has* (password, trusted device, recovery email, SIM, backup codes) — never the secret
+itself — and hands back a deterministic, non-AI-generated recovery path using Apple's/Google's own
+official mechanisms, clearly marked when a step depends on their process and can't be sped up.
+Progress tracks through its own `NOT_STARTED/IN_PROGRESS/WAITING/RECOVERED/FAILED` states; marking
+it `RECOVERED` (behind an explicit confirmation) completes the case's account-recovery action and
+re-runs the Recovery Decision Engine, exactly as the master spec requires. See
+[`docs/ACCOUNT_RECOVERY.md`](docs/ACCOUNT_RECOVERY.md) for the full design.
+
 **Part 8 — Device Location + Map.** RecoverAI does not independently track phones — the new
 `/recovery-cases/:caseId/location` page points the user at the official Apple Find My / Google Find
 Hub link (from Part 6's `LOCATE_DEVICE` action) and gives them a safe way to record what they saw

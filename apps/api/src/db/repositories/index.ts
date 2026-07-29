@@ -1,4 +1,5 @@
 import type { Queryable } from '../queryable';
+import { AccountRecoveryAttemptRepository } from './accountRecoveryAttemptRepository';
 import { AuditEventRepository } from './auditEventRepository';
 import { CeirRecordRepository } from './ceirRecordRepository';
 import { DeviceRepository } from './deviceRepository';
@@ -31,6 +32,7 @@ export function createRepositories(db: Queryable) {
     ceirRecords: new CeirRecordRepository(db),
     notifications: new NotificationRepository(db),
     auditEvents: new AuditEventRepository(db),
+    accountRecoveryAttempts: new AccountRecoveryAttemptRepository(db),
   };
 }
 
@@ -48,3 +50,4 @@ export * from './policeReportRepository';
 export * from './ceirRecordRepository';
 export * from './notificationRepository';
 export * from './auditEventRepository';
+export * from './accountRecoveryAttemptRepository';

@@ -1,4 +1,5 @@
-import type { OfficialExternalAction, PlatformType, RecoveryActionType, RiskLevel } from '@recoverai/shared';
+import type { OfficialExternalAction, RecoveryActionType, RiskLevel } from '@recoverai/shared';
+import { accountRecoveryProvider, findingProvider } from './officialProviderLinks';
 import type { EngineAction, ExistingActionState, RecoveryEngineInput, RecoveryEngineResult } from './types';
 
 /**
@@ -25,30 +26,6 @@ interface Candidate {
   instructions: string;
   officialExternalAction?: OfficialExternalAction | null;
   dependencies?: RecoveryActionType[];
-}
-
-function findingProvider(platform: PlatformType): OfficialExternalAction | null {
-  if (platform === 'ANDROID') {
-    return { provider: 'google', label: 'Open Google Find Hub', url: 'https://android.com/find' };
-  }
-  if (platform === 'IPHONE') {
-    return { provider: 'apple', label: 'Open Find My', url: 'https://www.icloud.com/find' };
-  }
-  return null;
-}
-
-function accountRecoveryProvider(platform: PlatformType): OfficialExternalAction | null {
-  if (platform === 'ANDROID') {
-    return {
-      provider: 'google',
-      label: 'Start Google Account Recovery',
-      url: 'https://accounts.google.com/signin/recovery',
-    };
-  }
-  if (platform === 'IPHONE') {
-    return { provider: 'apple', label: 'Start Apple Account Recovery', url: 'https://iforgot.apple.com' };
-  }
-  return null;
 }
 
 function computeRisk(input: RecoveryEngineInput): { riskLevel: RiskLevel; riskReasons: string[] } {

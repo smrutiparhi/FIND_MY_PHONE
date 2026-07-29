@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (14 hand-written SQL migrations, no ORM), a
+readiness endpoint. Part 2 built out the full schema (17 hand-written SQL migrations as of Part 9, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -266,6 +266,23 @@ since `locationStatus` is one of its 17 inputs. The map itself
 (`components/recoveryLocation/DeviceMap.tsx`, plain Leaflet) never draws a line between
 observations — that would visually imply continuous tracking between points that could be hours
 apart. See [`DEVICE_LOCATION.md`](DEVICE_LOCATION.md) for the full design.
+
+## Account Recovery Mode (Part 9)
+
+Triggered when the case owner can't sign in to the Apple/Google account tied to the device.
+`services/accountRecovery/generateAccountRecoveryPath.ts` is a pure function — platform + a
+checklist of what the user still has (password, trusted device, recovery email, ...) in, an ordered
+list of official-only recovery steps out — deliberately deterministic rather than AI-generated, the
+same "rules, not a prompt" discipline as Part 6. The checklist only ever asks *whether* the user
+still has something, never for the thing itself: no password/OTP/recovery-key field exists anywhere
+in this flow. Progress is tracked in its own `account_recovery_attempts` table
+(`NOT_STARTED/IN_PROGRESS/WAITING/RECOVERED/FAILED`) rather than overloading
+`RecoveryActionStatus` — the same reasoning `PoliceReportStatus` and `CeirStatus` already established
+in this schema. Marking an attempt `RECOVERED` does what the master spec requires verbatim ("When
+account access is restored, recalculate the Recovery Decision Engine and continue the case"): it
+completes the case's `ACCOUNT_RECOVERY` action, and re-runs `recalculateRecoveryCase()` with the
+same `accountAccessStatus` override mechanism Part 7's Recovery Agent uses. See
+[`ACCOUNT_RECOVERY.md`](ACCOUNT_RECOVERY.md) for the full design.
 
 ## External-service abstraction
 

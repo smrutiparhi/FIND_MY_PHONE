@@ -24,6 +24,7 @@ export type PoliceReportId = Brand<string, 'PoliceReportId'>;
 export type CeirRecordId = Brand<string, 'CeirRecordId'>;
 export type NotificationId = Brand<string, 'NotificationId'>;
 export type AuditEventId = Brand<string, 'AuditEventId'>;
+export type AccountRecoveryAttemptId = Brand<string, 'AccountRecoveryAttemptId'>;
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -202,6 +203,25 @@ export const CEIR_STATUSES = [
   'UNKNOWN',
 ] as const;
 export type CeirStatus = (typeof CEIR_STATUSES)[number];
+
+/**
+ * Distinct from RecoveryActionStatus for the same reason PoliceReportStatus
+ * and CeirStatus are their own enums (Part 9): WAITING and FAILED don't fit
+ * the generic action lifecycle the Recovery Decision Engine governs.
+ */
+export const ACCOUNT_RECOVERY_STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'WAITING', 'RECOVERED', 'FAILED'] as const;
+export type AccountRecoveryStatus = (typeof ACCOUNT_RECOVERY_STATUSES)[number];
+
+/** Verbatim checklist from the master spec's Part 9. "none/unsure" is an empty array, not its own value. */
+export const ACCOUNT_ACCESS_SIGNALS = [
+  'PASSWORD',
+  'TRUSTED_DEVICE',
+  'TRUSTED_PHONE_NUMBER',
+  'RECOVERY_EMAIL',
+  'SIM',
+  'BACKUP_AUTH_METHOD',
+] as const;
+export type AccountAccessSignal = (typeof ACCOUNT_ACCESS_SIGNALS)[number];
 
 export const CEIR_CHECKLIST_ITEMS = [
   'IMEI_INFORMATION',
@@ -392,6 +412,16 @@ export interface CeirRecord {
   submissionDate: string | null;
   notes: string | null;
   checklistCompletedItems: CeirChecklistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccountRecoveryAttempt {
+  id: AccountRecoveryAttemptId;
+  caseId: RecoveryCaseId;
+  status: AccountRecoveryStatus;
+  availableSignals: AccountAccessSignal[];
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }

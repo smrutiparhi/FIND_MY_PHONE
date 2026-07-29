@@ -12,6 +12,7 @@ import {
   updateActionStatus,
 } from '../controllers/recoveryCase.controller';
 import { createLocationObservation, listLocationObservations } from '../controllers/location.controller';
+import { getAccountRecovery, patchAccountRecovery } from '../controllers/accountRecovery.controller';
 import {
   caseActionParamsSchema,
   caseIdParamsSchema,
@@ -20,6 +21,7 @@ import {
   updateActionStatusSchema,
 } from '../validation/schemas/recoveryCase.schemas';
 import { recordLocationObservationSchema } from '../validation/schemas/location.schemas';
+import { updateAccountRecoveryAttemptSchema } from '../validation/schemas/accountRecovery.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -59,4 +61,17 @@ recoveryCaseRouter.post(
   validate(caseIdParamsSchema, 'params'),
   validate(recordLocationObservationSchema),
   asyncHandler(createLocationObservation),
+);
+recoveryCaseRouter.get(
+  '/:caseId/account-recovery',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  asyncHandler(getAccountRecovery),
+);
+recoveryCaseRouter.patch(
+  '/:caseId/account-recovery',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  validate(updateAccountRecoveryAttemptSchema),
+  asyncHandler(patchAccountRecovery),
 );

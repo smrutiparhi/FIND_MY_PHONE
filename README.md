@@ -13,6 +13,19 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 8 — Device Location + Map.** RecoverAI does not independently track phones — the new
+`/recovery-cases/:caseId/location` page points the user at the official Apple Find My / Google Find
+Hub link (from Part 6's `LOCATE_DEVICE` action) and gives them a safe way to record what they saw
+there as a `LocationObservation`. Verification status is always derived server-side from the claimed
+source, never client-submitted — a hand-typed guess can never be mislabeled as verified. Recording a
+location re-runs the Recovery Decision Engine (`locationStatus` is one of its 17 inputs). The map
+(plain Leaflet, `MAP_PROVIDER=maptiler` or `mapbox`) draws every observation as an independent
+marker — no connecting line, since that would imply continuous tracking; with no provider configured
+(the default) the page still shows every observation's coordinates, timestamp, and source as text,
+just without the map graphic. A fixed safety warning appears for any stolen case with a recorded
+location, telling the user not to confront a suspected thief. See
+[`docs/DEVICE_LOCATION.md`](docs/DEVICE_LOCATION.md) for the full design.
+
 **Part 7 — AI Recovery Agent.** A conversational assistant scoped to one case, with a chat panel on
 the new `/recovery-cases/:caseId` detail page (linked from every dashboard case card). It explains
 the Recovery Decision Engine's current recommendation and can update an action's status or record a

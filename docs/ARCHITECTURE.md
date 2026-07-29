@@ -246,9 +246,26 @@ how the Part 7 Recovery Agent enforces that with real tool boundaries rather tha
 config (provider name, publishable token) a real map SDK needs. It never computes or fabricates
 coordinates — that would violate the master spec's "never fabricate device location" rule; it
 only ever exposes configuration for rendering `LocationObservation` rows that already came from
-an authorized integration or the user. `NoopMapProvider` (used when `MAP_PROVIDER=none`) reports
-`isConfigured: false` so the UI can render an honest "map unavailable" state. Real providers
-(Mapbox/MapTiler/Google) are added in Part 8.
+an authorized integration or the user. `NoopMapProvider` (used when `MAP_PROVIDER=none`, the
+default) reports `isConfigured: false` so the UI can render an honest "map unavailable" state.
+`MapTilerMapProvider`/`MapboxMapProvider` (Part 8) are thin — both providers are just XYZ tile-URL
+templates, so there's no request/response translation layer the way `AiProvider` needs; `google` is
+declared in the env schema but has no frontend renderer (see below).
+
+## Device Location + Map (Part 8)
+
+RecoverAI does not independently track phones — it points the user at the official Apple Find My /
+Google Find Hub workflow (the same `officialExternalAction` link Part 6 already attaches to the
+`LOCATE_DEVICE` action) and gives them a safe way to record what they saw there as a
+`LocationObservation`. `services/location/deriveLocationVerificationStatus.ts` derives
+`VerificationStatus` from the claimed `LocationSource` server-side — a client can never submit its
+own verification status, so a hand-typed guess (`USER_ENTERED`) can never be mislabeled as verified
+(master spec: "Never label USER_ENTERED coordinates as live GPS"). `recordLocationObservation.ts`
+then re-runs the Recovery Decision Engine the same way every other write path in this app does,
+since `locationStatus` is one of its 17 inputs. The map itself
+(`components/recoveryLocation/DeviceMap.tsx`, plain Leaflet) never draws a line between
+observations — that would visually imply continuous tracking between points that could be hours
+apart. See [`DEVICE_LOCATION.md`](DEVICE_LOCATION.md) for the full design.
 
 ## External-service abstraction
 

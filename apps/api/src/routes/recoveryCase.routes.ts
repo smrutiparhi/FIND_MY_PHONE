@@ -11,6 +11,7 @@ import {
   sendAgentMessage,
   updateActionStatus,
 } from '../controllers/recoveryCase.controller';
+import { createLocationObservation, listLocationObservations } from '../controllers/location.controller';
 import {
   caseActionParamsSchema,
   caseIdParamsSchema,
@@ -18,6 +19,7 @@ import {
   sendAgentMessageSchema,
   updateActionStatusSchema,
 } from '../validation/schemas/recoveryCase.schemas';
+import { recordLocationObservationSchema } from '../validation/schemas/location.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -44,4 +46,17 @@ recoveryCaseRouter.post(
   validate(caseIdParamsSchema, 'params'),
   validate(sendAgentMessageSchema),
   asyncHandler(sendAgentMessage),
+);
+recoveryCaseRouter.get(
+  '/:caseId/locations',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  asyncHandler(listLocationObservations),
+);
+recoveryCaseRouter.post(
+  '/:caseId/locations',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  validate(recordLocationObservationSchema),
+  asyncHandler(createLocationObservation),
 );

@@ -99,6 +99,12 @@ export function RecoveryCaseDetailPage(): ReactElement {
             <CaseStatusBadge status={recoveryCase.status} />
           </div>
         </div>
+        <Link
+          to={`/recovery-cases/${recoveryCase.id}/location`}
+          className="mt-3 inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+        >
+          View device location
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

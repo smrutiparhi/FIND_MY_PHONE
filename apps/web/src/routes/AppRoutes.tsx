@@ -12,6 +12,7 @@ import { RegisterPage } from '../pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { NewRecoveryCasePage } from '../pages/wizard/NewRecoveryCasePage';
+import { RecoveryCaseDetailPage } from '../pages/RecoveryCaseDetailPage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -50,6 +51,7 @@ export function AppRoutes(): ReactElement {
               />
             }
           />
+          <Route path="/recovery-cases/:caseId" element={<RecoveryCaseDetailPage />} />
           <Route
             path="/evidence"
             element={

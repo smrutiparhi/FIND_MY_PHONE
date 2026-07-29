@@ -31,8 +31,11 @@ export const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 
   // Part 7 (AI Recovery Agent): 'mock' requires no key and is safe for local development.
+  // AI_MODEL overrides each provider's default model id (see services/ai/index.ts) - useful
+  // when an API key only has access to a different or dated model string.
   AI_PROVIDER: aiProviderSchema,
   AI_API_KEY: z.string().min(1).optional(),
+  AI_MODEL: z.string().min(1).optional(),
 
   // Part 8 (Device Location + Map): 'none' disables map tile/token issuance entirely.
   MAP_PROVIDER: mapProviderSchema,

@@ -1,4 +1,5 @@
 import type { CreateRecoveryCaseWizardInput, PlatformType } from '@recoverai/shared';
+import { deriveSensitiveAppFlags } from './sensitiveAppFlags';
 import { computeTimeSinceIncidentBucket } from './timeSinceIncident';
 import type { RecoveryEngineInput } from './types';
 
@@ -12,7 +13,7 @@ export function buildEngineInputForNewCase(
   wizardInput: CreateRecoveryCaseWizardInput,
   platform: PlatformType,
 ): RecoveryEngineInput {
-  const sensitiveApps = wizardInput.sensitiveApps;
+  const flags = deriveSensitiveAppFlags(wizardInput.sensitiveApps);
 
   return {
     incidentType: wizardInput.incidentType,
@@ -23,10 +24,7 @@ export function buildEngineInputForNewCase(
     screenLockStatus: wizardInput.screenLockEnabled,
     deviceFindingAvailability: wizardInput.deviceFindingAvailable,
     locationStatus: 'UNAVAILABLE',
-    financialAppsPresent: sensitiveApps.includes('BANKING') || sensitiveApps.includes('UPI'),
-    authenticatorPresent: sensitiveApps.includes('AUTHENTICATOR'),
-    passwordManagerPresent: sensitiveApps.includes('PASSWORD_MANAGER'),
-    workAccountPresent: sensitiveApps.includes('WORK_ACCOUNTS'),
+    ...flags,
     deviceSecured: false,
     simSecured: false,
     financialAccountsSecured: false,

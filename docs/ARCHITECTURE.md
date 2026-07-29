@@ -197,6 +197,22 @@ master spec's three worked examples plus 37 further scenarios (40 total,
 the full dependency-unblocking cascade (SIM → account recovery → device securing / device
 finding) and the resulting risk-level drop.
 
+## The AI Recovery Agent (Part 7)
+
+A conversational assistant scoped to exactly one `RecoveryCase`, built on the tool-calling AI
+provider abstraction below. It explains what the Recovery Decision Engine currently recommends and
+can update an action's status or record a corrected incident detail, but only through two narrow
+tools that both require explicit user confirmation (checked twice: the model's own claim, plus an
+independent server-side pattern match on the user's last message) and end by re-running the real
+`evaluateRecoveryDecision()` — never by talking its way around it. Conversation history lives only
+in the browser tab (`sessionStorage`), never the database: per the master spec ("store useful case
+events, not unnecessary sensitive conversation data"), every state-changing tool call instead
+writes a `TimelineEvent` with `source: 'AI_AGENT'`. See
+[`AI_RECOVERY_AGENT.md`](AI_RECOVERY_AGENT.md) for the full design — case-context injection,
+prompt-injection fencing for user-supplied free text, the output guard backstopping the "must
+never" rules, and the one real engine-plumbing gap Part 7 had to close (recalculation previously
+had no way to persist a corrected sensitive-app answer).
+
 ## Database access layer
 
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
@@ -211,13 +227,18 @@ enum literals and custom enum array types that the test suite caught).
 
 ## AI provider abstraction
 
-`services/ai/AiProvider.ts` defines the interface (`generateCompletion`); `services/ai/index.ts`
-is the factory that selects an implementation from `AI_PROVIDER`. Only `MockAiProvider` exists
-today — it never calls a real model, returns a response explicitly flagged `isSimulated: true`
-and prefixed `[DEMO AI PROVIDER]`, and requires no API key. Real providers (Anthropic, OpenAI)
-are added in Part 7 once the Recovery Agent has concrete prompts and tool definitions. Per the
-master spec, the AI layer may only ever *explain* a recommendation — the deterministic Recovery
-Decision Engine (see above) never depends on this interface and cannot be overridden by it.
+`services/ai/AiProvider.ts` defines the interface (`generateCompletion`, with tool-calling support
+added in Part 7 — a request may carry `tools`, a response's `content` can mix text and `tool_use`
+blocks); `services/ai/index.ts` is the factory that selects an implementation from `AI_PROVIDER`.
+`AnthropicAiProvider` and `OpenAiAiProvider` (Part 7) talk to their APIs directly over `fetch` — no
+SDK dependency, since the request/response shape needed here is small enough that a hand-rolled
+adapter keeps `AiProvider` the one translation point. `MockAiProvider` is the default and requires
+no API key — it never calls a tool, returns a response explicitly flagged `isSimulated: true` and
+prefixed `[DEMO AI PROVIDER]`, and is also the automatic fallback if a real provider is requested
+without its key configured. Per the master spec, the AI layer may only ever *explain* a
+recommendation — the deterministic Recovery Decision Engine (see above) never depends on this
+interface and cannot be overridden by it; see [`AI_RECOVERY_AGENT.md`](AI_RECOVERY_AGENT.md) for
+how the Part 7 Recovery Agent enforces that with real tool boundaries rather than just a prompt.
 
 ## Mapping provider abstraction
 

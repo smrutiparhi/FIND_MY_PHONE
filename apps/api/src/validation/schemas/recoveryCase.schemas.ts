@@ -45,3 +45,18 @@ export const caseActionParamsSchema = z.object({
 export const updateActionStatusSchema = z.object({
   status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED']),
 });
+
+// Caps mirror AI_AGENT_CHAT_MESSAGE_LIMITS in @recoverai/shared - the client
+// resends the whole transcript each turn (see docs/AI_RECOVERY_AGENT.md), so
+// this is the only place message volume/size is actually bounded.
+export const sendAgentMessageSchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().trim().min(1).max(4000),
+      }),
+    )
+    .min(1)
+    .max(40),
+});

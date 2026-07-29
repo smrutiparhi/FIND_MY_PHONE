@@ -13,6 +13,18 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 7 — AI Recovery Agent.** A conversational assistant scoped to one case, with a chat panel on
+the new `/recovery-cases/:caseId` detail page (linked from every dashboard case card). It explains
+the Recovery Decision Engine's current recommendation and can update an action's status or record a
+corrected incident detail (e.g. "I have UPI apps on it") through two tools, both requiring explicit
+confirmation checked two independent ways, and both ending by re-running the real engine — it never
+overrides `riskLevel` or `orderedActions` itself. Conversation history lives only in the browser tab
+(never the database); every real change the agent makes is instead recorded as a `TimelineEvent`.
+Real providers (`AI_PROVIDER=anthropic` or `openai`, both needing `AI_API_KEY`) sit behind the same
+`MockAiProvider` fallback as before — the default `mock` needs no key and is clearly labeled
+"DEMO AI PROVIDER" in the UI. See [`docs/AI_RECOVERY_AGENT.md`](docs/AI_RECOVERY_AGENT.md) for the
+full design, including the prompt-injection fencing and output-safety guard.
+
 **Part 6 — Recovery Decision Engine.** The master spec's "most important engineering part": a
 pure, deterministic rule engine (`services/recoveryEngine/evaluateRecoveryDecision.ts`) over the
 spec's full 17-dimension input space, reproducing its worked examples exactly — see

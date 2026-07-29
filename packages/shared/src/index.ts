@@ -4,4 +4,5 @@ export * from './types/domain';
 export * from './types/dashboard';
 export * from './types/wizard';
 export * from './types/recoveryEngine';
+export * from './types/aiAgent';
 export * from './utils/brand';

@@ -53,7 +53,15 @@ export async function createRecoveryCaseFromWizard(
 
     const engineInput = buildEngineInputForNewCase(input, device.platform);
     const engineResult = evaluateRecoveryDecision(engineInput);
-    const { recoveryCase: finalCase } = await applyEngineResult(repos, userId, recoveryCase.id, engineInput, engineResult, []);
+    const { recoveryCase: finalCase } = await applyEngineResult(
+      repos,
+      userId,
+      recoveryCase.id,
+      engineInput,
+      engineResult,
+      [],
+      input.sensitiveApps,
+    );
 
     const incidentLabel =
       input.incidentType === 'STOLEN' ? 'Stolen' : input.incidentType === 'LOST' ? 'Lost' : 'Missing';

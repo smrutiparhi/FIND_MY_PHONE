@@ -1,26 +1,39 @@
 import { env } from '../../config/env';
 import { logger } from '../../lib/logger';
 import { MockAiProvider } from './providers/MockAiProvider';
+import { AnthropicAiProvider } from './providers/AnthropicAiProvider';
+import { OpenAiAiProvider } from './providers/OpenAiAiProvider';
 import type { AiProvider } from './AiProvider';
+
+const DEFAULT_MODELS: Record<'anthropic' | 'openai', string> = {
+  anthropic: 'claude-sonnet-5',
+  openai: 'gpt-4o-mini',
+};
 
 let cachedProvider: AiProvider | undefined;
 
 /**
- * Provider factory. Real providers (Anthropic, OpenAI) are implemented in
- * Part 7 - AI Recovery Agent, once there are concrete prompts and tool
- * definitions to send them; requesting one before then falls back to the
- * mock rather than failing the whole API.
+ * Provider factory. Falls back to MockAiProvider whenever AI_PROVIDER is
+ * 'mock' (the default) or a real provider was requested without the API key
+ * it needs - the app should always boot and the chat should always respond
+ * with *something* clearly marked simulated, never a 500 just because a demo
+ * environment has no key configured.
  */
 export function getAiProvider(): AiProvider {
-  if (!cachedProvider) {
-    if (env.AI_PROVIDER !== 'mock') {
-      logger.warn(
-        { requestedProvider: env.AI_PROVIDER },
-        'Requested AI_PROVIDER has no real implementation yet (arrives in Part 7) - falling back to MockAiProvider',
-      );
-    }
-    cachedProvider = new MockAiProvider();
+  if (cachedProvider) return cachedProvider;
+
+  if (env.AI_PROVIDER !== 'mock' && !env.AI_API_KEY) {
+    logger.warn(
+      { requestedProvider: env.AI_PROVIDER },
+      'AI_PROVIDER is set but AI_API_KEY is missing - falling back to MockAiProvider',
+    );
+  } else if (env.AI_PROVIDER === 'anthropic' && env.AI_API_KEY) {
+    cachedProvider = new AnthropicAiProvider(env.AI_API_KEY, env.AI_MODEL ?? DEFAULT_MODELS.anthropic);
+  } else if (env.AI_PROVIDER === 'openai' && env.AI_API_KEY) {
+    cachedProvider = new OpenAiAiProvider(env.AI_API_KEY, env.AI_MODEL ?? DEFAULT_MODELS.openai);
   }
+
+  if (!cachedProvider) cachedProvider = new MockAiProvider();
   return cachedProvider;
 }
 
@@ -29,4 +42,10 @@ export type {
   AiCompletionRequest,
   AiCompletionResult,
   AiChatMessage,
+  AiContentBlock,
+  AiTextBlock,
+  AiToolUseBlock,
+  AiToolResultBlock,
+  AiToolDefinition,
+  AiToolParameterSchema,
 } from './AiProvider';

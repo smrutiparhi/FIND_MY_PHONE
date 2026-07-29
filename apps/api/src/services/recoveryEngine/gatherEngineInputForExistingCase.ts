@@ -1,5 +1,6 @@
-import type { Device, RecoveryAction, RecoveryCase } from '@recoverai/shared';
+import type { Device, RecoveryAction, RecoveryCase, SensitiveAppType } from '@recoverai/shared';
 import type { Repositories } from '../../db/repositories';
+import { deriveSensitiveAppFlags } from './sensitiveAppFlags';
 import { computeTimeSinceIncidentBucket } from './timeSinceIncident';
 import type { PoliceReportEngineStatus, RecoveryEngineInput } from './types';
 
@@ -7,6 +8,8 @@ export interface GatheredEngineInput {
   input: RecoveryEngineInput;
   /** The live DB rows behind `input.existingActions` - callers need real ids to persist updates. */
   existingDbActions: RecoveryAction[];
+  /** The latest assessment's raw checklist, since `input`'s four sensitive-app fields are already collapsed to booleans - a recalculation override needs the real array to merge into. */
+  sensitiveApps: SensitiveAppType[];
 }
 
 /**
@@ -56,10 +59,7 @@ export async function gatherEngineInputForExistingCase(
     screenLockStatus: latestAssessment?.screenLockEnabled ?? 'UNSURE',
     deviceFindingAvailability: latestAssessment?.deviceFindingAvailable ?? 'UNSURE',
     locationStatus: latestLocation ? 'AVAILABLE' : 'UNAVAILABLE',
-    financialAppsPresent: sensitiveApps.includes('BANKING') || sensitiveApps.includes('UPI'),
-    authenticatorPresent: sensitiveApps.includes('AUTHENTICATOR'),
-    passwordManagerPresent: sensitiveApps.includes('PASSWORD_MANAGER'),
-    workAccountPresent: sensitiveApps.includes('WORK_ACCOUNTS'),
+    ...deriveSensitiveAppFlags(sensitiveApps),
     deviceSecured: isCompleted('SECURE_DEVICE'),
     simSecured: isCompleted('SIM_PROTECTION'),
     financialAccountsSecured: isCompleted('FINANCIAL_PROTECTION'),
@@ -68,5 +68,5 @@ export async function gatherEngineInputForExistingCase(
     existingActions: actions.map((action) => ({ type: action.type, status: action.status })),
   };
 
-  return { input, existingDbActions: actions };
+  return { input, existingDbActions: actions, sensitiveApps };
 }

@@ -1,6 +1,18 @@
-import type { RecoveryAction, RecoveryActionId, RecoveryActionType, RecoveryCase, RecoveryCaseId, UserId } from '@recoverai/shared';
+import type {
+  RecoveryAction,
+  RecoveryActionId,
+  RecoveryActionType,
+  RecoveryCase,
+  RecoveryCaseId,
+  SensitiveAppType,
+  UserId,
+} from '@recoverai/shared';
 import type { Repositories } from '../../db/repositories';
 import type { RecoveryEngineInput, RecoveryEngineResult } from './types';
+
+function sameSensitiveApps(a: SensitiveAppType[], b: SensitiveAppType[]): boolean {
+  return a.length === b.length && a.every((type) => b.includes(type));
+}
 
 export interface ApplyEngineResultOutcome {
   recoveryCase: RecoveryCase;
@@ -14,7 +26,7 @@ export interface ApplyEngineResultOutcome {
  * already existed (never touching IN_PROGRESS/COMPLETED/SKIPPED rows'
  * status - see updatePriorityAndStatus), points the case at the new
  * recommended action, and records a new IncidentAssessment + timeline event
- * only when the computed risk actually changed. Shared by case creation
+ * only when the assessed state actually changed. Shared by case creation
  * (existingDbActions = []) and recalculation (existingDbActions = the case's
  * current rows) so both paths persist a RecoveryEngineResult identically.
  */
@@ -25,6 +37,8 @@ export async function applyEngineResult(
   engineInput: RecoveryEngineInput,
   engineResult: RecoveryEngineResult,
   existingDbActions: RecoveryAction[],
+  /** The raw checklist behind engineInput's four boolean sensitive-app fields - see gatherEngineInputForExistingCase.ts. */
+  sensitiveApps: SensitiveAppType[],
 ): Promise<ApplyEngineResultOutcome> {
   const idByType = new Map<RecoveryActionType, RecoveryActionId>(existingDbActions.map((a) => [a.type, a.id]));
 
@@ -59,17 +73,24 @@ export async function applyEngineResult(
   }
 
   const latestAssessment = await repos.incidentAssessments.findLatestByCase(caseId);
-  const riskChanged =
+  // Broader than "did the risk score change": an agent- or wizard-reported correction (a
+  // sensitive app the engine didn't know about, a screen-lock answer that was wrong) must still
+  // be captured in a new snapshot even on the rare turn where it happens not to move riskLevel -
+  // otherwise the next recalculation would silently read the stale prior assessment again.
+  const assessmentChanged =
     !latestAssessment ||
     latestAssessment.riskLevel !== engineResult.riskLevel ||
     latestAssessment.riskReasons.length !== engineResult.riskReasons.length ||
-    latestAssessment.riskReasons.some((reason, index) => reason !== engineResult.riskReasons[index]);
+    latestAssessment.riskReasons.some((reason, index) => reason !== engineResult.riskReasons[index]) ||
+    latestAssessment.screenLockEnabled !== engineInput.screenLockStatus ||
+    latestAssessment.deviceFindingAvailable !== engineInput.deviceFindingAvailability ||
+    !sameSensitiveApps(latestAssessment.sensitiveApps, sensitiveApps);
 
-  if (riskChanged) {
+  if (assessmentChanged) {
     await repos.incidentAssessments.create({
       caseId,
       screenLockEnabled: engineInput.screenLockStatus,
-      sensitiveApps: latestAssessment?.sensitiveApps ?? [],
+      sensitiveApps,
       deviceFindingAvailable: engineInput.deviceFindingAvailability,
       riskLevel: engineResult.riskLevel,
       riskReasons: engineResult.riskReasons,

@@ -11,3 +11,16 @@ export const baselineRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Every Recovery Agent message is a real (potentially billed) call to a real
+ * model provider - tighter than the app-wide baseline so a runaway client or
+ * scripted abuse can't rack up provider cost the way it could against a free
+ * read endpoint.
+ */
+export const agentMessageRateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});

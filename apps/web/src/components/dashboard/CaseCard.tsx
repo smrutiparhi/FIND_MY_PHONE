@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { Link } from 'react-router-dom';
 import type { DashboardCaseSummary, IncidentType, PlatformType } from '@recoverai/shared';
 import { RiskBadge } from './RiskBadge';
 import { CaseStatusBadge } from './CaseStatusBadge';
@@ -62,7 +63,15 @@ export function CaseCard({ summary }: { summary: DashboardCaseSummary }): ReactE
         </p>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">Last update: {formatRelativeTime(summary.updatedAt)}</p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-500">Last update: {formatRelativeTime(summary.updatedAt)}</p>
+        <Link
+          to={`/recovery-cases/${summary.caseId}`}
+          className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+        >
+          Open case &amp; chat
+        </Link>
+      </div>
     </article>
   );
 }

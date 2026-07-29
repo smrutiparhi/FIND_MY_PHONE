@@ -1,12 +1,21 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/authenticate';
 import { validate } from '../middleware/validate';
+import { agentMessageRateLimiter } from '../middleware/rateLimiter';
 import { asyncHandler } from '../lib/asyncHandler';
-import { createCase, getRecoveryPlan, listMyCases, updateActionStatus } from '../controllers/recoveryCase.controller';
+import {
+  createCase,
+  getCase,
+  getRecoveryPlan,
+  listMyCases,
+  sendAgentMessage,
+  updateActionStatus,
+} from '../controllers/recoveryCase.controller';
 import {
   caseActionParamsSchema,
   caseIdParamsSchema,
   createRecoveryCaseWizardSchema,
+  sendAgentMessageSchema,
   updateActionStatusSchema,
 } from '../validation/schemas/recoveryCase.schemas';
 
@@ -14,6 +23,7 @@ export const recoveryCaseRouter = Router();
 
 recoveryCaseRouter.get('/', requireAuth, asyncHandler(listMyCases));
 recoveryCaseRouter.post('/', requireAuth, validate(createRecoveryCaseWizardSchema), asyncHandler(createCase));
+recoveryCaseRouter.get('/:caseId', requireAuth, validate(caseIdParamsSchema, 'params'), asyncHandler(getCase));
 recoveryCaseRouter.get(
   '/:caseId/recovery-plan',
   requireAuth,
@@ -26,4 +36,12 @@ recoveryCaseRouter.patch(
   validate(caseActionParamsSchema, 'params'),
   validate(updateActionStatusSchema),
   asyncHandler(updateActionStatus),
+);
+recoveryCaseRouter.post(
+  '/:caseId/agent/messages',
+  requireAuth,
+  agentMessageRateLimiter,
+  validate(caseIdParamsSchema, 'params'),
+  validate(sendAgentMessageSchema),
+  asyncHandler(sendAgentMessage),
 );

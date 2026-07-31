@@ -13,6 +13,16 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 11 — SIM/eSIM Protection Center.** A guided flow (`/recovery-cases/:caseId/sim`) for blocking
+a compromised SIM, understanding eSIM-specific risk, getting a replacement, and knowing when OTP-based
+recovery comes back online — without ever claiming RecoverAI blocked anything itself; every status
+change is the user reporting what *they* did, and the only official channels shown come from a small,
+independently-verified carrier directory (Jio, Airtel, Vi, BSNL) rather than a fabricated one.
+Marking the SIM blocked or replaced (behind an explicit confirmation) completes the case's SIM
+protection action and re-runs the Recovery Decision Engine — with a real, tested effect: an account-
+recovery step that depended on SIM access unblocks the moment the SIM is secured. See
+[`docs/SIM_PROTECTION.md`](docs/SIM_PROTECTION.md) for the full design.
+
 **Part 10 — Emergency Recovery Mode.** A focused, single-screen view (`/recovery-cases/:caseId/emergency`,
 standalone with no nav chrome) for cases the Recovery Decision Engine already rates `CRITICAL` or
 `HIGH` risk — no second risk-detection system, that one check *is* the master spec's trigger list

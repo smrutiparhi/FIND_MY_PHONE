@@ -123,6 +123,12 @@ export function RecoveryCaseDetailPage(): ReactElement {
           >
             Account recovery
           </Link>
+          <Link
+            to={`/recovery-cases/${recoveryCase.id}/sim`}
+            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            SIM / eSIM protection
+          </Link>
         </div>
       </div>
 

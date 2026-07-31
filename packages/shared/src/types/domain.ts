@@ -25,6 +25,7 @@ export type CeirRecordId = Brand<string, 'CeirRecordId'>;
 export type NotificationId = Brand<string, 'NotificationId'>;
 export type AuditEventId = Brand<string, 'AuditEventId'>;
 export type AccountRecoveryAttemptId = Brand<string, 'AccountRecoveryAttemptId'>;
+export type SimProtectionRecordId = Brand<string, 'SimProtectionRecordId'>;
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -222,6 +223,15 @@ export const ACCOUNT_ACCESS_SIGNALS = [
   'BACKUP_AUTH_METHOD',
 ] as const;
 export type AccountAccessSignal = (typeof ACCOUNT_ACCESS_SIGNALS)[number];
+
+/**
+ * Distinct from RecoveryActionStatus for the same reason AccountRecoveryStatus
+ * is (Part 11): BLOCKED here means the carrier has blocked the SIM - a
+ * completely different meaning from RecoveryActionStatus.BLOCKED (an action
+ * waiting on an unmet dependency).
+ */
+export const SIM_STATUSES = ['ACTIVE', 'BLOCK_REQUESTED', 'BLOCKED', 'REPLACEMENT_PENDING', 'REPLACED', 'UNKNOWN'] as const;
+export type SimStatus = (typeof SIM_STATUSES)[number];
 
 export const CEIR_CHECKLIST_ITEMS = [
   'IMEI_INFORMATION',
@@ -421,6 +431,15 @@ export interface AccountRecoveryAttempt {
   caseId: RecoveryCaseId;
   status: AccountRecoveryStatus;
   availableSignals: AccountAccessSignal[];
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SimProtectionRecord {
+  id: SimProtectionRecordId;
+  caseId: RecoveryCaseId;
+  status: SimStatus;
   notes: string | null;
   createdAt: string;
   updatedAt: string;

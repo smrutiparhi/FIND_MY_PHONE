@@ -14,6 +14,7 @@ import {
 import { createLocationObservation, listLocationObservations } from '../controllers/location.controller';
 import { getAccountRecovery, patchAccountRecovery } from '../controllers/accountRecovery.controller';
 import { getEmergencyMode } from '../controllers/emergencyMode.controller';
+import { getSimProtection, patchSimProtection } from '../controllers/simProtection.controller';
 import {
   caseActionParamsSchema,
   caseIdParamsSchema,
@@ -23,6 +24,7 @@ import {
 } from '../validation/schemas/recoveryCase.schemas';
 import { recordLocationObservationSchema } from '../validation/schemas/location.schemas';
 import { updateAccountRecoveryAttemptSchema } from '../validation/schemas/accountRecovery.schemas';
+import { updateSimProtectionRecordSchema } from '../validation/schemas/simProtection.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -81,4 +83,17 @@ recoveryCaseRouter.get(
   requireAuth,
   validate(caseIdParamsSchema, 'params'),
   asyncHandler(getEmergencyMode),
+);
+recoveryCaseRouter.get(
+  '/:caseId/sim-protection',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  asyncHandler(getSimProtection),
+);
+recoveryCaseRouter.patch(
+  '/:caseId/sim-protection',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  validate(updateSimProtectionRecordSchema),
+  asyncHandler(patchSimProtection),
 );

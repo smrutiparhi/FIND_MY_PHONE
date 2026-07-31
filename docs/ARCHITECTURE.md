@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (17 hand-written SQL migrations as of Part 9, no ORM), a
+readiness endpoint. Part 2 built out the full schema (18 hand-written SQL migrations as of Part 11, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -295,6 +295,24 @@ only `completedCount`/`totalCount` (a progress number) plus exactly `currentActi
 — so "do not display a huge checklist during emergency mode" is structural, not just a frontend
 choice. Renders standalone (`/recovery-cases/:caseId/emergency`, no nav chrome), the same treatment
 as the incident wizard. See [`EMERGENCY_MODE.md`](EMERGENCY_MODE.md) for the full design.
+
+## SIM/eSIM Protection Center (Part 11)
+
+Guides SIM blocking, eSIM-specific risk, replacement, and OTP-recovery timing without RecoverAI ever
+claiming to have blocked a SIM itself — master spec: "Do not pretend RecoverAI itself blocked a SIM
+unless a legitimate carrier API confirms the action." No such integration exists, so every status
+change in `sim_protection_records` (its own `sim_status` enum — `BLOCKED` there means something
+entirely different from `RecoveryActionStatus.BLOCKED`, never compared against it) is the user
+reporting what they did, sourced `USER`/`USER_REPORTED` throughout.
+`services/simProtection/carrierDirectory.ts` is exactly what the master spec calls "maintained
+configuration/content": a small, independently-verified list of real carrier websites/numbers
+(Jio, Airtel, Vi, BSNL), matched by whole word against a device's free-text carrier field — never a
+fabricated channel, never a raw substring match. `generateSimGuidance.ts` is a pure function, the
+same "rules, not a prompt" discipline as Part 9. Marking the SIM `BLOCKED` or `REPLACED` persists
+`simAccessStatus: 'SIM_ALREADY_BLOCKED'` through the same recalculation-overrides mechanism Part 7
+and Part 9 use — with a real, tested knock-on effect: an `ACCOUNT_RECOVERY` action Part 6 made
+dependent on SIM access unblocks the moment the SIM is secured. See
+[`SIM_PROTECTION.md`](SIM_PROTECTION.md) for the full design.
 
 ## External-service abstraction
 

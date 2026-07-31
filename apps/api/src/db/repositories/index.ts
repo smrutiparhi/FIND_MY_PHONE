@@ -10,6 +10,7 @@ import { NotificationRepository } from './notificationRepository';
 import { PoliceReportRepository } from './policeReportRepository';
 import { RecoveryActionRepository } from './recoveryActionRepository';
 import { RecoveryCaseRepository } from './recoveryCaseRepository';
+import { SimProtectionRecordRepository } from './simProtectionRecordRepository';
 import { TimelineEventRepository } from './timelineEventRepository';
 import { UserRepository } from './userRepository';
 
@@ -33,6 +34,7 @@ export function createRepositories(db: Queryable) {
     notifications: new NotificationRepository(db),
     auditEvents: new AuditEventRepository(db),
     accountRecoveryAttempts: new AccountRecoveryAttemptRepository(db),
+    simProtectionRecords: new SimProtectionRecordRepository(db),
   };
 }
 
@@ -51,3 +53,4 @@ export * from './ceirRecordRepository';
 export * from './notificationRepository';
 export * from './auditEventRepository';
 export * from './accountRecoveryAttemptRepository';
+export * from './simProtectionRecordRepository';

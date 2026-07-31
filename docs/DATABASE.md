@@ -1,6 +1,6 @@
 # RecoverAI — Database (Part 2)
 
-PostgreSQL schema for RecoverAI, applied through 19 hand-written SQL migrations
+PostgreSQL schema for RecoverAI, applied through 20 hand-written SQL migrations
 (`apps/api/src/db/migrations/`) run by a minimal custom runner
 (`apps/api/src/db/migrate.ts`) — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for
 why this project uses plain SQL + a repository layer instead of an ORM.

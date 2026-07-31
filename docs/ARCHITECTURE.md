@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (19 hand-written SQL migrations as of Part 12, no ORM), a
+readiness endpoint. Part 2 built out the full schema (20 hand-written SQL migrations as of Part 13, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -329,6 +329,30 @@ implementation of "do not claim financial accounts are secure merely because the
 reopens automatically if a fully-protected case later gets a new or unconfirmed item, so the engine's
 claim can never lag behind the user's own list. See [`FINANCIAL_SECURITY.md`](FINANCIAL_SECURITY.md)
 for the full design.
+
+## Police Complaint Generator (Part 13)
+
+The one part that deliberately routes real case content through the Part 7 `AiProvider`
+abstraction to generate prose, rather than selecting from pre-written text — every other guided
+flow (Account Recovery, SIM Protection, Financial Security) stays "rules, not a prompt" on
+purpose, but a police complaint is a narrative document, exactly what an LLM is suited for, and the
+master spec explicitly asks for AI-generated drafting here. Grounding is enforced by construction:
+everything the model can see funnels through one interface, `PoliceComplaintFacts`
+(`services/policeReport/policeComplaintFacts.ts`) — user-attested fields sent as typed, and
+system-verified fields (device details, decrypted IMEI/serial, incident type, latest location
+observation) assembled server-side from the case's own records, never client-supplied. Missing
+facts are labeled `not provided` rather than omitted, so absence reads as absence rather than a gap
+an LLM might fill in. `policeComplaintSystemPrompt.ts` states the master spec's "must never invent
+an IMEI/address/suspect, never assert theft as fact" rules directly; `policeComplaintOutputGuard.ts`
+then mechanically re-checks the generated text against those same facts (the same backstop pattern
+as Part 7's `outputGuard.ts`) and, if anything looks invented, keeps the draft but prefixes a
+`REVIEW REQUIRED` notice rather than discarding it — the master spec already requires human
+approval regardless. `PoliceReportStatus` has no `SUBMITTED` state by design (only
+`USER_MARKED_SUBMITTED`, with an optional reference number), so RecoverAI can never claim a
+complaint was actually filed. Approval creates a real `Evidence` row (`category: 'POLICE_COMPLAINT'`)
+and a Timeline event; marking submitted is the only transition that touches the Recovery Decision
+Engine, completing `POLICE_REPORT` and unblocking the dependent `CEIR_SUBMISSION` action. See
+[`POLICE_REPORT.md`](POLICE_REPORT.md) for the full design.
 
 ## External-service abstraction
 

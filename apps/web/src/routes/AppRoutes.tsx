@@ -18,6 +18,7 @@ import { AccountRecoveryPage } from '../pages/AccountRecoveryPage';
 import { EmergencyModePage } from '../pages/EmergencyModePage';
 import { SimProtectionPage } from '../pages/SimProtectionPage';
 import { FinancialSecurityPage } from '../pages/FinancialSecurityPage';
+import { PoliceReportPage } from '../pages/PoliceReportPage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -65,6 +66,7 @@ export function AppRoutes(): ReactElement {
           <Route path="/recovery-cases/:caseId/account-recovery" element={<AccountRecoveryPage />} />
           <Route path="/recovery-cases/:caseId/sim" element={<SimProtectionPage />} />
           <Route path="/recovery-cases/:caseId/financial-security" element={<FinancialSecurityPage />} />
+          <Route path="/recovery-cases/:caseId/police-report" element={<PoliceReportPage />} />
           <Route
             path="/evidence"
             element={

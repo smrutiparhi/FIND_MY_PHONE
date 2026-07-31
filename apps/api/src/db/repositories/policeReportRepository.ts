@@ -32,6 +32,7 @@ interface PoliceReportVersionRow {
   police_report_id: string;
   version_number: number;
   draft_text: string;
+  is_simulated: boolean;
   created_at: string;
 }
 
@@ -62,6 +63,7 @@ function toPoliceReportVersion(row: PoliceReportVersionRow): PoliceReportVersion
     policeReportId: row.police_report_id as PoliceReportId,
     versionNumber: row.version_number,
     draftText: row.draft_text,
+    isSimulated: row.is_simulated,
     createdAt: row.created_at,
   };
 }
@@ -76,6 +78,7 @@ export interface CreatePoliceReportInput {
   incidentDescription: string;
   deviceDescriptionSnapshot: string;
   draftText: string;
+  isSimulated?: boolean;
 }
 
 /**
@@ -111,8 +114,8 @@ export class PoliceReportRepository {
     if (!row) throw new Error('Insert into police_reports returned no row');
 
     await this.db.query(
-      'INSERT INTO police_report_versions (police_report_id, version_number, draft_text) VALUES ($1, 1, $2)',
-      [row.id, row.draft_text],
+      'INSERT INTO police_report_versions (police_report_id, version_number, draft_text, is_simulated) VALUES ($1, 1, $2, $3)',
+      [row.id, row.draft_text, input.isSimulated ?? false],
     );
 
     return toPoliceReport(row);
@@ -141,6 +144,7 @@ export class PoliceReportRepository {
     id: PoliceReportId,
     ownerUserId: UserId,
     draftText: string,
+    isSimulated = false,
   ): Promise<PoliceReport | null> {
     const existing = await this.findByIdForUser(id, ownerUserId);
     if (!existing) return null;
@@ -152,13 +156,74 @@ export class PoliceReportRepository {
     const nextVersion = versionResult.rows[0]?.next_version ?? 1;
 
     await this.db.query(
-      'INSERT INTO police_report_versions (police_report_id, version_number, draft_text) VALUES ($1, $2, $3)',
-      [id, nextVersion, draftText],
+      'INSERT INTO police_report_versions (police_report_id, version_number, draft_text, is_simulated) VALUES ($1, $2, $3, $4)',
+      [id, nextVersion, draftText, isSimulated],
     );
 
     const result = await this.db.query<PoliceReportRow>(
       `UPDATE police_reports SET draft_text = $2, status = 'DRAFT' WHERE id = $1 RETURNING *`,
       [id, draftText],
+    );
+    const row = result.rows[0];
+    return row ? toPoliceReport(row) : null;
+  }
+
+  /**
+   * Regeneration (Part 13) can correct the underlying facts, not just the
+   * prose - unlike updateDraft (a pure text replacement for manual edits),
+   * this also updates the fact columns so they never drift from what the
+   * latest draft actually says.
+   */
+  async regenerate(
+    id: PoliceReportId,
+    ownerUserId: UserId,
+    patch: {
+      ownerFullName: string;
+      ownerContact: string;
+      incidentDateTime: string | null;
+      lastKnownPlace: string | null;
+      incidentDescription: string;
+      deviceDescriptionSnapshot: string;
+      draftText: string;
+      isSimulated: boolean;
+    },
+  ): Promise<PoliceReport | null> {
+    const existing = await this.findByIdForUser(id, ownerUserId);
+    if (!existing) return null;
+
+    const versionResult = await this.db.query<{ next_version: number }>(
+      'SELECT COALESCE(MAX(version_number), 0) + 1 AS next_version FROM police_report_versions WHERE police_report_id = $1',
+      [id],
+    );
+    const nextVersion = versionResult.rows[0]?.next_version ?? 1;
+
+    await this.db.query(
+      'INSERT INTO police_report_versions (police_report_id, version_number, draft_text, is_simulated) VALUES ($1, $2, $3, $4)',
+      [id, nextVersion, patch.draftText, patch.isSimulated],
+    );
+
+    const result = await this.db.query<PoliceReportRow>(
+      `UPDATE police_reports SET
+         owner_full_name = $2,
+         owner_contact = $3,
+         incident_date_time = $4,
+         last_known_place = $5,
+         incident_description = $6,
+         device_description_snapshot = $7,
+         draft_text = $8,
+         status = 'DRAFT'
+       WHERE id = $1
+       RETURNING *`,
+      [
+        id,
+        patch.ownerFullName,
+        patch.ownerContact,
+        patch.incidentDateTime,
+        patch.lastKnownPlace,
+        patch.incidentDescription,
+        patch.deviceDescriptionSnapshot,
+        patch.draftText,
+      ],
     );
     const row = result.rows[0];
     return row ? toPoliceReport(row) : null;

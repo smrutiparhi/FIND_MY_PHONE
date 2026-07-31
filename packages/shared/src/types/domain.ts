@@ -420,6 +420,8 @@ export interface PoliceReportVersion {
   policeReportId: PoliceReportId;
   versionNumber: number;
   draftText: string;
+  /** True when this version came from MockAiProvider (no real AI_API_KEY configured) - Part 13. */
+  isSimulated: boolean;
   createdAt: string;
 }
 

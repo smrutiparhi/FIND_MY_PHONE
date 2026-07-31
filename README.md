@@ -13,6 +13,22 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 13 — Police Complaint Generator.** A guided drafting flow
+(`/recovery-cases/:caseId/police-report`) that generates a professional complaint from verified
+facts using the Part 7 AI provider — the one part that deliberately routes real case content
+through an LLM to produce prose, rather than selecting from pre-written rules. Grounding is
+enforced by construction: the model only ever sees a strict `PoliceComplaintFacts` boundary
+(user-attested fields plus system-verified device/IMEI/incident details), missing facts are
+labeled `not provided` rather than omitted, and a mechanical output guard flags anything that looks
+like an invented IMEI, address, suspect, or unsupported theft claim — flagged drafts are kept with a
+`REVIEW REQUIRED` notice, never silently discarded, since the user must approve the final text
+regardless. Preview, edit, save, export (as `.txt`), and full version history are all supported;
+there is no "submitted" status the app can claim on its own, only `USER_MARKED_SUBMITTED` with an
+optional reference number the user provides. Approving adds the complaint to the Evidence Vault and
+Timeline; marking it submitted completes the case's police-report step and unblocks the CEIR
+submission step that depends on it. See [`docs/POLICE_REPORT.md`](docs/POLICE_REPORT.md) for the
+full design.
+
 **Part 12 — Financial Security Center.** A user-built checklist (`/recovery-cases/:caseId/financial-security`)
 of every banking app, UPI app, digital wallet, saved card, banking email, and password manager on
 the device — never a UPI PIN, ATM PIN, CVV, bank password, card number, or OTP; there's no field for

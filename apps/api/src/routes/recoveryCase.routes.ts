@@ -22,6 +22,15 @@ import {
   postFinancialProtectionItem,
 } from '../controllers/financialSecurity.controller';
 import {
+  getPoliceReport,
+  listPoliceReports,
+  patchPoliceReportDraft,
+  postApprovePoliceReport,
+  postMarkPoliceReportSubmitted,
+  postPoliceReport,
+  postRegeneratePoliceReportDraft,
+} from '../controllers/policeReport.controller';
+import {
   caseActionParamsSchema,
   caseIdParamsSchema,
   createRecoveryCaseWizardSchema,
@@ -36,6 +45,13 @@ import {
   financialItemParamsSchema,
   updateFinancialProtectionItemSchema,
 } from '../validation/schemas/financialSecurity.schemas';
+import {
+  createPoliceReportSchema,
+  markPoliceReportSubmittedSchema,
+  policeReportParamsSchema,
+  regeneratePoliceReportDraftSchema,
+  updatePoliceReportDraftSchema,
+} from '../validation/schemas/policeReport.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -133,4 +149,50 @@ recoveryCaseRouter.delete(
   requireAuth,
   validate(financialItemParamsSchema, 'params'),
   asyncHandler(deleteFinancialProtectionItemHandler),
+);
+recoveryCaseRouter.get(
+  '/:caseId/police-reports',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  asyncHandler(listPoliceReports),
+);
+recoveryCaseRouter.post(
+  '/:caseId/police-reports',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  validate(createPoliceReportSchema),
+  asyncHandler(postPoliceReport),
+);
+recoveryCaseRouter.get(
+  '/:caseId/police-reports/:reportId',
+  requireAuth,
+  validate(policeReportParamsSchema, 'params'),
+  asyncHandler(getPoliceReport),
+);
+recoveryCaseRouter.post(
+  '/:caseId/police-reports/:reportId/regenerate',
+  requireAuth,
+  validate(policeReportParamsSchema, 'params'),
+  validate(regeneratePoliceReportDraftSchema),
+  asyncHandler(postRegeneratePoliceReportDraft),
+);
+recoveryCaseRouter.patch(
+  '/:caseId/police-reports/:reportId/draft',
+  requireAuth,
+  validate(policeReportParamsSchema, 'params'),
+  validate(updatePoliceReportDraftSchema),
+  asyncHandler(patchPoliceReportDraft),
+);
+recoveryCaseRouter.post(
+  '/:caseId/police-reports/:reportId/approve',
+  requireAuth,
+  validate(policeReportParamsSchema, 'params'),
+  asyncHandler(postApprovePoliceReport),
+);
+recoveryCaseRouter.post(
+  '/:caseId/police-reports/:reportId/mark-submitted',
+  requireAuth,
+  validate(policeReportParamsSchema, 'params'),
+  validate(markPoliceReportSubmittedSchema),
+  asyncHandler(postMarkPoliceReportSubmitted),
 );

@@ -30,6 +30,7 @@ import {
   postPoliceReport,
   postRegeneratePoliceReportDraft,
 } from '../controllers/policeReport.controller';
+import { getCeir, patchCeir } from '../controllers/ceir.controller';
 import {
   caseActionParamsSchema,
   caseIdParamsSchema,
@@ -52,6 +53,7 @@ import {
   regeneratePoliceReportDraftSchema,
   updatePoliceReportDraftSchema,
 } from '../validation/schemas/policeReport.schemas';
+import { updateCeirRecordSchema } from '../validation/schemas/ceir.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -195,4 +197,12 @@ recoveryCaseRouter.post(
   validate(policeReportParamsSchema, 'params'),
   validate(markPoliceReportSubmittedSchema),
   asyncHandler(postMarkPoliceReportSubmitted),
+);
+recoveryCaseRouter.get('/:caseId/ceir', requireAuth, validate(caseIdParamsSchema, 'params'), asyncHandler(getCeir));
+recoveryCaseRouter.patch(
+  '/:caseId/ceir',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  validate(updateCeirRecordSchema),
+  asyncHandler(patchCeir),
 );

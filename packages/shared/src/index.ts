@@ -12,4 +12,5 @@ export * from './types/emergencyMode';
 export * from './types/simProtection';
 export * from './types/financialSecurity';
 export * from './types/policeReport';
+export * from './types/ceir';
 export * from './utils/brand';

@@ -13,6 +13,20 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 14 — CEIR Assistant for India.** A guided flow (`/recovery-cases/:caseId/ceir`) for preparing
+and tracking the official Government of India CEIR/Sanchar Saathi IMEI-blocking process — a
+checklist (IMEI, mobile number, device details, police report, identity document, purchase invoice,
+replacement SIM status), links to the real government portal, and a place to record what actually
+happened there (Request ID, submission date, status, notes). RecoverAI never claims to have blocked
+an IMEI itself — every field is user-reported, and checklist items show a read-only "on file" hint
+computed from real data elsewhere in the case (a filed police complaint, a resolved SIM status, an
+IMEI already on record) without ever auto-checking the box. Reaching Submitted, Processing, Blocked,
+or Unblocked for the first time completes the case's CEIR step; the first arrival at Submitted also
+files an Evidence Vault entry once a Request ID is on record. Building this part also turned up a
+real bug in a partial-update pattern shared by three earlier parts (Account Recovery, SIM
+Protection, Financial Security) — see [`docs/CEIR.md`](docs/CEIR.md) for what it was and why this
+part's own code avoids it. See [`docs/CEIR.md`](docs/CEIR.md) for the full design.
+
 **Part 13 — Police Complaint Generator.** A guided drafting flow
 (`/recovery-cases/:caseId/police-report`) that generates a professional complaint from verified
 facts using the Part 7 AI provider — the one part that deliberately routes real case content

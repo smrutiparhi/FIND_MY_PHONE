@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (20 hand-written SQL migrations as of Part 13, no ORM), a
+readiness endpoint. Part 2 built out the full schema (20 hand-written SQL migrations as of Part 14 — this part added no new migration, since `ceir_records` already existed from Part 2, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -353,6 +353,28 @@ complaint was actually filed. Approval creates a real `Evidence` row (`category:
 and a Timeline event; marking submitted is the only transition that touches the Recovery Decision
 Engine, completing `POLICE_REPORT` and unblocking the dependent `CEIR_SUBMISSION` action. See
 [`POLICE_REPORT.md`](POLICE_REPORT.md) for the full design.
+
+## CEIR Assistant for India (Part 14)
+
+`ceir_records` and its repository were built in Part 2, well before this part existed — the same
+"schema ships early, the numbered part adds the service layer" pattern as `sim_protection_records`
+(Part 11) and `police_report_versions` (Part 13). Master spec: "Never claim RecoverAI can directly
+block an IMEI unless a legitimate government integration explicitly supports it" — no such
+integration exists, so `status`, `ceirRequestId`, `submissionDate`, and `notes` are all 100%
+user-reported, and the only links shown (`services/ceir/ceirOfficialLinks.ts`) are real,
+independently-verified Government of India URLs, never a fabricated channel. The checklist itself
+stays purely user-toggled (mirroring Part 9's access-signal checklist), but
+`buildCeirChecklistHints.ts` cross-references real data already on file elsewhere in the case — IMEI
+on the device, a filed police complaint (Part 13), a resolved SIM status (Part 11), a purchase
+invoice already in the Evidence Vault — as a read-only "on file" hint that never auto-checks the
+box itself. Reaching `SUBMITTED`/`PROCESSING`/`BLOCKED`/`UNBLOCKED` for the first time completes the
+`CEIR_SUBMISSION` action (the same set `evaluateRecoveryDecision.ts` already uses to stop offering
+it as a candidate); the first arrival at `SUBMITTED` specifically also adds an `Evidence` row when a
+Request ID is on file, mirroring Part 13's approval-creates-Evidence pattern. Building this part
+also surfaced a real, previously-undetected bug in the `'field' in input ? input.field : undefined`
+partial-update idiom shared by Parts 9/11/12's own services — see [`CEIR.md`](CEIR.md) for details;
+this part's own `ceirService.ts` avoids it, the three earlier call sites were left as-is. See
+[`CEIR.md`](CEIR.md) for the full design.
 
 ## External-service abstraction
 

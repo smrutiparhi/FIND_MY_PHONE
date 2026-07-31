@@ -13,6 +13,16 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 12 — Financial Security Center.** A user-built checklist (`/recovery-cases/:caseId/financial-security`)
+of every banking app, UPI app, digital wallet, saved card, banking email, and password manager on
+the device — never a UPI PIN, ATM PIN, CVV, bank password, card number, or OTP; there's no field for
+any of them. Three of the six categories auto-seed once from the wizard's own checklist so nothing
+has to be re-entered; the rest are only ever user-added. The case's financial-protection step
+completes only once *every* tracked item is independently confirmed, and — the direct implementation
+of "do not claim financial accounts are secure merely because the phone was locked" — automatically
+reopens if a fully-protected case later gets a new or unconfirmed item. See
+[`docs/FINANCIAL_SECURITY.md`](docs/FINANCIAL_SECURITY.md) for the full design.
+
 **Part 11 — SIM/eSIM Protection Center.** A guided flow (`/recovery-cases/:caseId/sim`) for blocking
 a compromised SIM, understanding eSIM-specific risk, getting a replacement, and knowing when OTP-based
 recovery comes back online — without ever claiming RecoverAI blocked anything itself; every status

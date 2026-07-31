@@ -10,4 +10,5 @@ export * from './types/location';
 export * from './types/accountRecovery';
 export * from './types/emergencyMode';
 export * from './types/simProtection';
+export * from './types/financialSecurity';
 export * from './utils/brand';

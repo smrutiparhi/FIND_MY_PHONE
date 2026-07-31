@@ -26,6 +26,7 @@ export type NotificationId = Brand<string, 'NotificationId'>;
 export type AuditEventId = Brand<string, 'AuditEventId'>;
 export type AccountRecoveryAttemptId = Brand<string, 'AccountRecoveryAttemptId'>;
 export type SimProtectionRecordId = Brand<string, 'SimProtectionRecordId'>;
+export type FinancialProtectionItemId = Brand<string, 'FinancialProtectionItemId'>;
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -232,6 +233,14 @@ export type AccountAccessSignal = (typeof ACCOUNT_ACCESS_SIGNALS)[number];
  */
 export const SIM_STATUSES = ['ACTIVE', 'BLOCK_REQUESTED', 'BLOCKED', 'REPLACEMENT_PENDING', 'REPLACED', 'UNKNOWN'] as const;
 export type SimStatus = (typeof SIM_STATUSES)[number];
+
+/** Verbatim checklist from the master spec's Part 12. Distinct from SensitiveAppType (Part 5's coarser wizard checklist) - digital wallets and saved cards have no equivalent there. */
+export const FINANCIAL_ITEM_CATEGORIES = ['UPI', 'BANKING_APP', 'DIGITAL_WALLET', 'SAVED_CARD', 'BANKING_EMAIL', 'PASSWORD_MANAGER'] as const;
+export type FinancialItemCategory = (typeof FINANCIAL_ITEM_CATEGORIES)[number];
+
+/** Verbatim from the master spec's Part 12. CONFIRMED_BY_INTEGRATION is reserved for a real banking/UPI integration that doesn't exist yet - no code path sets it today. */
+export const FINANCIAL_PROTECTION_STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'CONFIRMED_BY_USER', 'CONFIRMED_BY_INTEGRATION'] as const;
+export type FinancialProtectionStatus = (typeof FINANCIAL_PROTECTION_STATUSES)[number];
 
 export const CEIR_CHECKLIST_ITEMS = [
   'IMEI_INFORMATION',
@@ -440,6 +449,17 @@ export interface SimProtectionRecord {
   id: SimProtectionRecordId;
   caseId: RecoveryCaseId;
   status: SimStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancialProtectionItem {
+  id: FinancialProtectionItemId;
+  caseId: RecoveryCaseId;
+  category: FinancialItemCategory;
+  label: string | null;
+  status: FinancialProtectionStatus;
   notes: string | null;
   createdAt: string;
   updatedAt: string;

@@ -4,6 +4,7 @@ import { AuditEventRepository } from './auditEventRepository';
 import { CeirRecordRepository } from './ceirRecordRepository';
 import { DeviceRepository } from './deviceRepository';
 import { EvidenceRepository } from './evidenceRepository';
+import { FinancialProtectionItemRepository } from './financialProtectionItemRepository';
 import { IncidentAssessmentRepository } from './incidentAssessmentRepository';
 import { LocationObservationRepository } from './locationObservationRepository';
 import { NotificationRepository } from './notificationRepository';
@@ -35,6 +36,7 @@ export function createRepositories(db: Queryable) {
     auditEvents: new AuditEventRepository(db),
     accountRecoveryAttempts: new AccountRecoveryAttemptRepository(db),
     simProtectionRecords: new SimProtectionRecordRepository(db),
+    financialProtectionItems: new FinancialProtectionItemRepository(db),
   };
 }
 
@@ -54,3 +56,4 @@ export * from './notificationRepository';
 export * from './auditEventRepository';
 export * from './accountRecoveryAttemptRepository';
 export * from './simProtectionRecordRepository';
+export * from './financialProtectionItemRepository';

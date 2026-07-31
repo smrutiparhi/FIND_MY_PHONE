@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (18 hand-written SQL migrations as of Part 11, no ORM), a
+readiness endpoint. Part 2 built out the full schema (19 hand-written SQL migrations as of Part 12, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -313,6 +313,22 @@ same "rules, not a prompt" discipline as Part 9. Marking the SIM `BLOCKED` or `R
 and Part 9 use — with a real, tested knock-on effect: an `ACCOUNT_RECOVERY` action Part 6 made
 dependent on SIM access unblocks the moment the SIM is secured. See
 [`SIM_PROTECTION.md`](SIM_PROTECTION.md) for the full design.
+
+## Financial Security Center (Part 12)
+
+Unlike Parts 9/11's one-record-per-case pattern, `financial_protection_items` is a **list** — a
+device can have several banking apps, wallets, and cards each needing independent tracking, so this
+is closer to `location_observations` in shape. The checklist (`UPI`/`BANKING_APP`/`DIGITAL_WALLET`/
+`SAVED_CARD`/`BANKING_EMAIL`/`PASSWORD_MANAGER`) is its own enum, not a reuse of Part 5's coarser
+`SensitiveAppType` — three of the six overlap and get auto-seeded from the wizard's answer the first
+time the list is empty, the rest have no wizard equivalent and are only ever user-added. Master spec:
+"never ask for [a] UPI PIN, ATM PIN, CVV, bank password, full card number, OTP" — there is no field
+for any of them anywhere in this part. `financialAccountsSecured` in the Recovery Decision Engine
+completes only once **every** tracked item is independently confirmed, and — this is the direct
+implementation of "do not claim financial accounts are secure merely because the phone was locked" —
+reopens automatically if a fully-protected case later gets a new or unconfirmed item, so the engine's
+claim can never lag behind the user's own list. See [`FINANCIAL_SECURITY.md`](FINANCIAL_SECURITY.md)
+for the full design.
 
 ## External-service abstraction
 

@@ -16,6 +16,12 @@ import { getAccountRecovery, patchAccountRecovery } from '../controllers/account
 import { getEmergencyMode } from '../controllers/emergencyMode.controller';
 import { getSimProtection, patchSimProtection } from '../controllers/simProtection.controller';
 import {
+  deleteFinancialProtectionItemHandler,
+  getFinancialSecurity,
+  patchFinancialProtectionItem,
+  postFinancialProtectionItem,
+} from '../controllers/financialSecurity.controller';
+import {
   caseActionParamsSchema,
   caseIdParamsSchema,
   createRecoveryCaseWizardSchema,
@@ -25,6 +31,11 @@ import {
 import { recordLocationObservationSchema } from '../validation/schemas/location.schemas';
 import { updateAccountRecoveryAttemptSchema } from '../validation/schemas/accountRecovery.schemas';
 import { updateSimProtectionRecordSchema } from '../validation/schemas/simProtection.schemas';
+import {
+  createFinancialProtectionItemSchema,
+  financialItemParamsSchema,
+  updateFinancialProtectionItemSchema,
+} from '../validation/schemas/financialSecurity.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -96,4 +107,30 @@ recoveryCaseRouter.patch(
   validate(caseIdParamsSchema, 'params'),
   validate(updateSimProtectionRecordSchema),
   asyncHandler(patchSimProtection),
+);
+recoveryCaseRouter.get(
+  '/:caseId/financial-security',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  asyncHandler(getFinancialSecurity),
+);
+recoveryCaseRouter.post(
+  '/:caseId/financial-security/items',
+  requireAuth,
+  validate(caseIdParamsSchema, 'params'),
+  validate(createFinancialProtectionItemSchema),
+  asyncHandler(postFinancialProtectionItem),
+);
+recoveryCaseRouter.patch(
+  '/:caseId/financial-security/items/:itemId',
+  requireAuth,
+  validate(financialItemParamsSchema, 'params'),
+  validate(updateFinancialProtectionItemSchema),
+  asyncHandler(patchFinancialProtectionItem),
+);
+recoveryCaseRouter.delete(
+  '/:caseId/financial-security/items/:itemId',
+  requireAuth,
+  validate(financialItemParamsSchema, 'params'),
+  asyncHandler(deleteFinancialProtectionItemHandler),
 );

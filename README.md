@@ -13,6 +13,28 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 19 — Notifications.** In-app notifications for the master spec's seven event types, plus
+per-user preferences (muting, quiet hours, channel toggles) — the first settings table in this app
+that's one row per *user* rather than per case. Four types fire at a real, immediate state
+transition (`CRITICAL_ACTION_PENDING` on entering Critical/High risk, `ACCOUNT_RECOVERY_UPDATE`,
+`SIM_STATUS_UPDATE`, `DEVICE_RECOVERY_CHECKLIST`); the other three (`CASE_INACTIVITY`,
+`CEIR_FOLLOWUP_REMINDER`, `EVIDENCE_REMINDER`) are time-elapsed and have no scheduler to run
+on — this app has never had one — so they're checked opportunistically whenever a user actually
+opens their notification list, deduplicated by a per-case cooldown. "Except for user-selected
+critical recovery alerts" is enforced at the application layer, not just the UI:
+`CRITICAL_ACTION_PENDING` can never be muted or quiet-houred, even if a client tries. A small
+channel-provider interface exists for email/push/SMS, but only email is wired to actually attempt a
+(best-effort, non-blocking) send, using the user's own real auth email — push and SMS stay honest,
+uncalled interfaces, since no device-token or phone-number storage exists anywhere in the app to
+send them to. Writing the reminder tests surfaced a real, easy-to-repeat trap: every table's
+`updated_at` column is protected by a trigger that silently overwrites any value a raw `UPDATE`
+tries to set, so a test backdating a timestamp has to disable that trigger for the one write or the
+backdate never takes effect. Browser-verifying the real click-through flow (a nav-link click, not a
+full page reload) caught a genuine staleness bug: the persistent app shell fetched the nav badge's
+unread count once on mount and never again, so it kept showing a stale number after marking
+notifications read and navigating elsewhere — fixed by refetching on every route change. See
+[`docs/NOTIFICATIONS.md`](docs/NOTIFICATIONS.md) for the full design.
+
 **Part 18 — Device Recovered workflow.** "I found my phone" doesn't immediately close the case -
 confirming physical possession is the one real state change (moves the case to Recovered, finally
 firing the `DEVICE_RECOVERED` timeline event Part 16 left unwired), then a ten-item guided checklist

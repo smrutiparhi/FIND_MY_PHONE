@@ -4,6 +4,7 @@ import { authRouter } from './auth.routes';
 import { recoveryCaseRouter } from './recoveryCase.routes';
 import { deviceRouter } from './device.routes';
 import { mapRouter } from './map.routes';
+import { notificationRouter } from './notification.routes';
 
 export const apiRouter = Router();
 
@@ -12,3 +13,4 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/recovery-cases', recoveryCaseRouter);
 apiRouter.use('/devices', deviceRouter);
 apiRouter.use('/map', mapRouter);
+apiRouter.use('/notifications', notificationRouter);

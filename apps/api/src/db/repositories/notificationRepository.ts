@@ -95,4 +95,13 @@ export class NotificationRepository {
     );
     return result.rowCount ?? 0;
   }
+
+  /** Reminder de-duplication (services/notifications/reminderChecks.ts) - "has this case already gotten one of these recently?". */
+  async existsRecentForCase(caseId: RecoveryCaseId, type: NotificationType, since: Date): Promise<boolean> {
+    const result = await this.db.query(
+      'SELECT 1 FROM notifications WHERE case_id = $1 AND type = $2 AND created_at >= $3 LIMIT 1',
+      [caseId, type, since.toISOString()],
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
 }

@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (21 hand-written SQL migrations as of Part 18, no ORM), a
+readiness endpoint. Part 2 built out the full schema (22 hand-written SQL migrations as of Part 19, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -457,6 +457,26 @@ no reason (nothing in it depends on checklist state), adding several seconds of 
 original always-flash-to-loading refresh was unmounting `CloseCasePanel` on every toggle, silently
 resetting its "I've reviewed the unresolved actions" checkbox. See
 [`DEVICE_RECOVERED.md`](DEVICE_RECOVERED.md) for the full design.
+
+## Notifications (Part 19)
+
+Seven master-spec notification types, four wired at a real state transition (`CRITICAL_ACTION_
+PENDING` on the transition into `CRITICAL`/`HIGH` risk, `ACCOUNT_RECOVERY_UPDATE`, `SIM_STATUS_
+UPDATE`, `DEVICE_RECOVERY_CHECKLIST`) and three time-elapsed (`CASE_INACTIVITY`, `CEIR_FOLLOWUP_
+REMINDER`, `EVIDENCE_REMINDER`) checked opportunistically inside `listNotifications()` rather than by
+a background scheduler, since none exists anywhere in this app - a per-case, per-type cooldown stops
+repeated list opens from duplicating the same reminder. `notification_preferences` is the first
+one-row-per-*user* (not per-case) settings table, via `getOrCreateForUser`. `CRITICAL_ACTION_PENDING`
+is enforced as never mutable at the application layer, not just the UI - `updateNotificationPreferences`
+strips it from any client-submitted `mutedTypes` rather than trusting the client. A small
+`NotificationChannelProvider` interface exists for email/push/SMS, but only email is wired to attempt
+a real (still best-effort, non-blocking) send, using the user's own auth email - push/SMS have no
+token or number storage anywhere in the app to send to, so they stay honest interfaces rather than
+faked integrations. See [`NOTIFICATIONS.md`](NOTIFICATIONS.md) for the full design, including two
+real bugs caught by actually running the app: every table's `updated_at` trigger silently overwrites
+a test's attempt to backdate that column (worked around in two reminder tests), and the persistent
+app shell's nav badge fetched its unread count once on mount and went stale after in-app navigation
+- only caught by driving a real nav-link click in a browser rather than a full page reload.
 
 ## External-service abstraction
 

@@ -1,6 +1,6 @@
 # RecoverAI — Database (Part 2)
 
-PostgreSQL schema for RecoverAI, applied through 21 hand-written SQL migrations
+PostgreSQL schema for RecoverAI, applied through 22 hand-written SQL migrations
 (`apps/api/src/db/migrations/`) run by a minimal custom runner
 (`apps/api/src/db/migrate.ts`) — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for
 why this project uses plain SQL + a repository layer instead of an ORM.
@@ -12,6 +12,7 @@ erDiagram
     USERS ||--o{ DEVICES : owns
     USERS ||--o{ RECOVERY_CASES : owns
     USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o| NOTIFICATION_PREFERENCES : "has at most one"
     USERS ||--o{ AUDIT_EVENTS : "acted as (nullable)"
     DEVICES ||--o{ RECOVERY_CASES : "is subject of"
     RECOVERY_CASES ||--o{ INCIDENT_ASSESSMENTS : "has history of"
@@ -143,6 +144,15 @@ erDiagram
         uuid case_id FK
         notification_type type
         bool is_read
+    }
+    NOTIFICATION_PREFERENCES {
+        uuid id PK
+        uuid user_id FK UK "one per user, not per case"
+        notification_type_array muted_types
+        bool quiet_hours_enabled
+        smallint quiet_hours_start_minute
+        smallint quiet_hours_end_minute
+        text timezone
     }
     AUDIT_EVENTS {
         uuid id PK

@@ -28,6 +28,7 @@ export type AccountRecoveryAttemptId = Brand<string, 'AccountRecoveryAttemptId'>
 export type SimProtectionRecordId = Brand<string, 'SimProtectionRecordId'>;
 export type FinancialProtectionItemId = Brand<string, 'FinancialProtectionItemId'>;
 export type DeviceRecoveryChecklistId = Brand<string, 'DeviceRecoveryChecklistId'>;
+export type NotificationPreferencesId = Brand<string, 'NotificationPreferencesId'>;
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -511,6 +512,32 @@ export interface Notification {
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
+}
+
+/**
+ * "Allow notification preferences and quiet settings except for
+ * user-selected critical recovery alerts" - `mutedTypes` can never contain
+ * `CRITICAL_ACTION_PENDING`, enforced in
+ * services/notifications/notificationPreferences.ts, not by the schema.
+ * Quiet hours are minutes-since-local-midnight rather than a TIME column,
+ * so an overnight window (e.g. 22:00-06:00) is just "start > end" in
+ * application logic. email/push/sms_enabled are forward-looking toggles for
+ * providers that don't exist yet (see services/notifications/channels/) -
+ * turning them on today has no effect beyond recording the preference.
+ */
+export interface NotificationPreferences {
+  id: NotificationPreferencesId;
+  userId: UserId;
+  mutedTypes: NotificationType[];
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  smsEnabled: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStartMinute: number | null;
+  quietHoursEndMinute: number | null;
+  timezone: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuditEvent {

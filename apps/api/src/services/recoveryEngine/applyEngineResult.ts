@@ -8,7 +8,10 @@ import type {
   UserId,
 } from '@recoverai/shared';
 import type { Repositories } from '../../db/repositories';
+import { createNotification } from '../notifications/createNotification';
 import type { RecoveryEngineInput, RecoveryEngineResult } from './types';
+
+const HIGH_RISK_LEVELS = new Set(['CRITICAL', 'HIGH']);
 
 function sameSensitiveApps(a: SensitiveAppType[], b: SensitiveAppType[]): boolean {
   return a.length === b.length && a.every((type) => b.includes(type));
@@ -87,6 +90,12 @@ export async function applyEngineResult(
     !sameSensitiveApps(latestAssessment.sensitiveApps, sensitiveApps);
 
   if (assessmentChanged) {
+    // "Critical recovery action pending" (Part 19) fires only on the transition *into*
+    // CRITICAL/HIGH risk, not on every recalculation that happens to stay there - the same
+    // "log once, on the real transition" discipline as SIM_PROTECTION_STARTED etc.
+    const wasAlreadyHighRisk = latestAssessment ? HIGH_RISK_LEVELS.has(latestAssessment.riskLevel) : false;
+    const isNowHighRisk = HIGH_RISK_LEVELS.has(engineResult.riskLevel);
+
     await repos.incidentAssessments.create({
       caseId,
       screenLockEnabled: engineInput.screenLockStatus,
@@ -102,6 +111,16 @@ export async function applyEngineResult(
       source: 'SYSTEM',
       verificationStatus: 'SYSTEM_VERIFIED',
     });
+
+    if (isNowHighRisk && !wasAlreadyHighRisk) {
+      await createNotification(repos, {
+        userId,
+        caseId,
+        type: 'CRITICAL_ACTION_PENDING',
+        title: `${engineResult.riskLevel === 'CRITICAL' ? 'Critical' : 'High'} risk: ${engineResult.currentRecommendedAction?.title ?? 'this case needs attention'}`,
+        body: engineResult.currentRecommendedAction?.reason ?? 'This case now needs your attention.',
+      });
+    }
   }
 
   await repos.recoveryCases.update(caseId, userId, { riskLevel: engineResult.riskLevel });

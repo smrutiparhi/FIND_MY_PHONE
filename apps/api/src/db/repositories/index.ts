@@ -9,6 +9,7 @@ import { FinancialProtectionItemRepository } from './financialProtectionItemRepo
 import { IncidentAssessmentRepository } from './incidentAssessmentRepository';
 import { LocationObservationRepository } from './locationObservationRepository';
 import { NotificationRepository } from './notificationRepository';
+import { NotificationPreferencesRepository } from './notificationPreferencesRepository';
 import { PoliceReportRepository } from './policeReportRepository';
 import { RecoveryActionRepository } from './recoveryActionRepository';
 import { RecoveryCaseRepository } from './recoveryCaseRepository';
@@ -39,6 +40,7 @@ export function createRepositories(db: Queryable) {
     simProtectionRecords: new SimProtectionRecordRepository(db),
     financialProtectionItems: new FinancialProtectionItemRepository(db),
     deviceRecoveryChecklists: new DeviceRecoveryChecklistRepository(db),
+    notificationPreferences: new NotificationPreferencesRepository(db),
   };
 }
 
@@ -60,3 +62,4 @@ export * from './accountRecoveryAttemptRepository';
 export * from './simProtectionRecordRepository';
 export * from './financialProtectionItemRepository';
 export * from './deviceRecoveryChecklistRepository';
+export * from './notificationPreferencesRepository';

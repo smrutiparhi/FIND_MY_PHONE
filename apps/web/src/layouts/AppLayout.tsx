@@ -1,5 +1,7 @@
-import { useState, type ReactElement } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useState, type ReactElement } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import type { NotificationListState } from '@recoverai/shared';
+import { apiGet } from '../lib/apiClient';
 
 const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
   { to: '/', label: 'Dashboard', end: true },
@@ -25,6 +27,36 @@ function navLinkClasses({ isActive }: { isActive: boolean }): string {
  */
 export function AppLayout(): ReactElement {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
+
+  // AppLayout wraps every authenticated route via <Outlet /> and never
+  // remounts on client-side navigation, so fetching once on mount alone
+  // would leave the badge stale after e.g. marking notifications read and
+  // clicking to another page (caught in a real browser, not by any test -
+  // the badge kept showing the old count until a full page reload).
+  // Refetching on every route change is the same lightweight, no-global-
+  // state approach the rest of this app already uses.
+  useEffect(() => {
+    apiGet<NotificationListState>('/api/notifications?unreadOnly=true')
+      .then((data) => setUnreadCount(data.unreadCount))
+      .catch(() => {
+        /* Non-critical - the nav badge just stays at its last known value if this fails. */
+      });
+  }, [location.pathname]);
+
+  function renderLabel(item: { to: string; label: string }): ReactElement {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        {item.label}
+        {item.to === '/notifications' && unreadCount > 0 ? (
+          <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -37,7 +69,7 @@ export function AppLayout(): ReactElement {
           <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
             {NAV_ITEMS.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClasses}>
-                {item.label}
+                {renderLabel(item)}
               </NavLink>
             ))}
           </nav>
@@ -67,7 +99,7 @@ export function AppLayout(): ReactElement {
                   className={navLinkClasses}
                   onClick={() => setMobileNavOpen(false)}
                 >
-                  {item.label}
+                  {renderLabel(item)}
                 </NavLink>
               ))}
             </div>

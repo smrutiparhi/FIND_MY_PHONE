@@ -11,6 +11,7 @@ import { createRepositories } from '../../db/repositories';
 import { NotFoundError, ValidationError } from '../../lib/errors';
 import { recalculateRecoveryCase } from '../recoveryEngine/recalculateRecoveryCase';
 import { toRecoveryPlan } from '../recoveryEngine/toRecoveryPlan';
+import { createNotification } from '../notifications/createNotification';
 import { buildFinalCaseSummary } from './buildFinalCaseSummary';
 
 const UNRESOLVED_EXCLUDED_TYPES = new Set(['MONITOR']);
@@ -81,6 +82,13 @@ export async function updateDeviceRecoveryChecklist(
     if (!['RECOVERED', 'CLOSED', 'ERASED'].includes(recoveryCase.status)) {
       await repos.recoveryCases.update(caseId, userId, { status: 'RECOVERED' });
     }
+    await createNotification(repos, {
+      userId,
+      caseId,
+      type: 'DEVICE_RECOVERY_CHECKLIST',
+      title: 'Finish your recovery checklist',
+      body: "Now that you've confirmed you have the device back, work through the recovery checklist before closing the case.",
+    });
   }
 
   return loadState(pool, userId, caseId);

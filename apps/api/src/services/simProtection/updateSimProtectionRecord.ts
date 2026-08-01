@@ -4,6 +4,7 @@ import { createRepositories } from '../../db/repositories';
 import { NotFoundError } from '../../lib/errors';
 import { recalculateRecoveryCase } from '../recoveryEngine/recalculateRecoveryCase';
 import { toRecoveryPlan } from '../recoveryEngine/toRecoveryPlan';
+import { createNotification } from '../notifications/createNotification';
 import { findCarrierGuide } from './carrierDirectory';
 import { generateSimGuidance } from './generateSimGuidance';
 
@@ -86,6 +87,16 @@ export async function updateSimProtectionRecord(
       verificationStatus: 'USER_REPORTED',
       recoveryActionId: simAction?.id ?? null,
       createdByUserId: userId,
+    });
+    await createNotification(repos, {
+      userId,
+      caseId,
+      type: 'SIM_STATUS_UPDATE',
+      title: updated.status === 'REPLACED' ? 'SIM replaced' : 'SIM blocked by carrier',
+      body:
+        updated.status === 'REPLACED'
+          ? "Your SIM has been replaced - account recovery that depends on OTPs to this number should work again."
+          : 'Your carrier has confirmed the SIM is blocked - no one else can use it to intercept OTPs.',
     });
   } else if (input.status && input.status !== 'BLOCK_REQUESTED') {
     await repos.timelineEvents.create({

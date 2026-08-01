@@ -23,6 +23,7 @@ import { CeirPage } from '../pages/CeirPage';
 import { EvidenceVaultPage } from '../pages/EvidenceVaultPage';
 import { TimelinePage } from '../pages/TimelinePage';
 import { DeviceRecoveredPage } from '../pages/DeviceRecoveredPage';
+import { NotificationsPage } from '../pages/NotificationsPage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -84,15 +85,7 @@ export function AppRoutes(): ReactElement {
               />
             }
           />
-          <Route
-            path="/notifications"
-            element={
-              <ComingSoonPage
-                title="Notifications"
-                description="In-app notifications are coming in a later part of RecoverAI."
-              />
-            }
-          />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>

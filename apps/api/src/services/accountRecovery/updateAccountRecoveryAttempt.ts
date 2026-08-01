@@ -4,6 +4,7 @@ import { createRepositories } from '../../db/repositories';
 import { NotFoundError } from '../../lib/errors';
 import { recalculateRecoveryCase } from '../recoveryEngine/recalculateRecoveryCase';
 import { toRecoveryPlan } from '../recoveryEngine/toRecoveryPlan';
+import { createNotification } from '../notifications/createNotification';
 import { generateAccountRecoveryPath } from './generateAccountRecoveryPath';
 
 async function loadState(pool: Pool, userId: UserId, caseId: RecoveryCaseId): Promise<AccountRecoveryState> {
@@ -83,6 +84,13 @@ export async function updateAccountRecoveryAttempt(
       recoveryActionId: accountRecoveryAction?.id ?? null,
       createdByUserId: userId,
     });
+    await createNotification(repos, {
+      userId,
+      caseId,
+      type: 'ACCOUNT_RECOVERY_UPDATE',
+      title: 'Account access restored',
+      body: "You've recovered access to your account - the recovery plan has been updated.",
+    });
   } else if (input.status === 'WAITING' || input.status === 'FAILED') {
     await repos.timelineEvents.create({
       caseId,
@@ -92,6 +100,15 @@ export async function updateAccountRecoveryAttempt(
       verificationStatus: 'USER_REPORTED',
       createdByUserId: userId,
     });
+    if (input.status === 'FAILED') {
+      await createNotification(repos, {
+        userId,
+        caseId,
+        type: 'ACCOUNT_RECOVERY_UPDATE',
+        title: 'Account recovery attempt failed',
+        body: 'Your last account recovery attempt was marked as failed - review your available signals and try again.',
+      });
+    }
   }
 
   const steps = generateAccountRecoveryPath(device.platform, updated.availableSignals);

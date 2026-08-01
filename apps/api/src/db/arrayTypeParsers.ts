@@ -15,6 +15,7 @@ const ENUM_ARRAY_TYPE_NAMES = [
   'ceir_checklist_item',
   'account_access_signal',
   'device_recovery_checklist_item',
+  'notification_type',
 ] as const;
 
 function parsePostgresEnumArrayLiteral(raw: string): string[] {

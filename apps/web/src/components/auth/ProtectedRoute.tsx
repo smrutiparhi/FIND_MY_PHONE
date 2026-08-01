@@ -9,9 +9,7 @@ export function ProtectedRoute(): ReactElement {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-sm text-slate-400">
-        Checking your session...
-      </div>
+      <div className="flex min-h-screen items-center justify-center text-sm text-slate-400">Checking your session...</div>
     );
   }
 

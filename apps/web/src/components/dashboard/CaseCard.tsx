@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import type { DashboardCaseSummary, IncidentType, PlatformType } from '@recoverai/shared';
-import { RiskBadge } from './RiskBadge';
-import { CaseStatusBadge } from './CaseStatusBadge';
-import { formatRelativeTime } from '../../lib/formatRelativeTime';
+import { formatRelativeTime } from '@recoverai/shared';
+import { RiskBadge, CaseStatusBadge, NextActionCard } from '@recoverai/ui';
 
 const INCIDENT_LABELS: Record<IncidentType, string> = {
   LOST: 'Lost',
@@ -22,7 +21,7 @@ export function CaseCard({ summary }: { summary: DashboardCaseSummary }): ReactE
   const { device, location, securityProgress, currentRecommendedAction } = summary;
 
   return (
-    <article className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <article className="glass-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
@@ -39,7 +38,7 @@ export function CaseCard({ summary }: { summary: DashboardCaseSummary }): ReactE
         </div>
       </div>
 
-      <dl className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-800 pt-4 text-sm sm:grid-cols-2">
+      <dl className="mt-4 grid grid-cols-1 gap-3 border-t border-white/10 pt-4 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-slate-500">Location</dt>
           <dd className="text-slate-200">
@@ -56,19 +55,16 @@ export function CaseCard({ summary }: { summary: DashboardCaseSummary }): ReactE
         </div>
       </dl>
 
-      <div className="mt-4 rounded-md border border-sky-900 bg-sky-950/50 p-3">
-        <p className="text-xs font-medium tracking-wide text-sky-400 uppercase">Next action</p>
-        <p className="mt-0.5 text-sm font-medium text-white">
-          {currentRecommendedAction ? currentRecommendedAction.title : 'No action recommended right now'}
-        </p>
+      <div className="mt-4">
+        <NextActionCard
+          compact
+          title={currentRecommendedAction ? currentRecommendedAction.title : 'No action recommended right now'}
+        />
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="text-xs text-slate-500">Last update: {formatRelativeTime(summary.updatedAt)}</p>
-        <Link
-          to={`/recovery-cases/${summary.caseId}`}
-          className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-        >
+        <Link to={`/recovery-cases/${summary.caseId}`} className="btn btn-secondary px-3 py-1.5 text-xs">
           Open case &amp; chat
         </Link>
       </div>

@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react';
 import type { PoliceReportVersion } from '@recoverai/shared';
-import { formatRelativeTime } from '../../lib/formatRelativeTime';
+import { formatRelativeTime } from '@recoverai/shared';
 
 /** "Store complaint versions" (master spec) - every edit and regeneration is kept, never overwritten in place. */
 export function PoliceReportVersionHistory({ versions }: { versions: PoliceReportVersion[] }): ReactElement {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Version history</h2>
       <ul className="mt-3 space-y-1.5">
         {versions.map((version) => (

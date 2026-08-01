@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { DashboardCaseSummary } from '@recoverai/shared';
 import { ApiClientError, apiGet } from '../lib/apiClient';
 import { useIsOnline } from '../hooks/useIsOnline';
+import { EmptyState, ErrorState, SkeletonCard } from '@recoverai/ui';
 import { OfflineBanner } from '../components/dashboard/OfflineBanner';
 import { CaseCard } from '../components/dashboard/CaseCard';
 import { HistoricalCaseRow } from '../components/dashboard/HistoricalCaseRow';
@@ -20,19 +21,8 @@ function describeError(err: unknown): string {
   return 'Something went wrong.';
 }
 
-function CardSkeleton(): ReactElement {
-  return (
-    <div className="animate-pulse rounded-lg border border-slate-800 bg-slate-900 p-5" aria-hidden="true">
-      <div className="h-3 w-24 rounded bg-slate-800" />
-      <div className="mt-2 h-5 w-40 rounded bg-slate-800" />
-      <div className="mt-2 h-3 w-32 rounded bg-slate-800" />
-      <div className="mt-6 h-16 rounded bg-slate-800" />
-    </div>
-  );
-}
-
 const REPORT_CTA_CLASSES =
-  'inline-flex shrink-0 items-center justify-center rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500';
+  'inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-rose-600 to-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_-4px_rgba(244,63,94,0.6)] transition hover:brightness-110';
 
 export function DashboardPage(): ReactElement {
   const isOnline = useIsOnline();
@@ -59,7 +49,7 @@ export function DashboardPage(): ReactElement {
 
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+          <h1 className="font-display text-2xl font-semibold text-white">Dashboard</h1>
           <p className="text-sm text-slate-400">Your active and past device recovery cases.</p>
         </div>
         <Link to="/recovery/new" className={REPORT_CTA_CLASSES}>
@@ -68,37 +58,24 @@ export function DashboardPage(): ReactElement {
       </div>
 
       {state.status === 'loading' ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CardSkeleton />
-          <CardSkeleton />
+        <div role="status" aria-label="Loading your cases" className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       ) : null}
 
-      {state.status === 'error' ? (
-        <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-          <p className="font-medium">Couldn&apos;t load your cases.</p>
-          <p className="mt-1 text-red-400">{state.message}</p>
-          <button
-            type="button"
-            onClick={load}
-            className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-          >
-            Try again
-          </button>
-        </div>
-      ) : null}
+      {state.status === 'error' ? <ErrorState message={state.message} onRetry={load} title="Couldn't load your cases." /> : null}
 
       {hasNoCases ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-8 text-center">
-          <p className="text-base font-medium text-white">No recovery cases yet</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-400">
-            If you&apos;ve lost a phone or had one stolen, start a case and we&apos;ll walk you through what to do
-            first.
-          </p>
-          <Link to="/recovery/new" className={`${REPORT_CTA_CLASSES} mt-4`}>
-            Report Lost or Stolen Phone
-          </Link>
-        </div>
+        <EmptyState
+          title="No recovery cases yet"
+          description="If you've lost a phone or had one stolen, start a case and we'll walk you through what to do first."
+          action={
+            <Link to="/recovery/new" className={REPORT_CTA_CLASSES}>
+              Report Lost or Stolen Phone
+            </Link>
+          }
+        />
       ) : null}
 
       {state.status === 'success' && activeCases.length > 0 ? (
@@ -115,7 +92,7 @@ export function DashboardPage(): ReactElement {
       {state.status === 'success' && historicalCases.length > 0 ? (
         <section>
           <h2 className="mb-3 text-sm font-semibold text-slate-300">Past cases</h2>
-          <ul className="rounded-lg border border-slate-800 bg-slate-900 px-4">
+          <ul className="glass-panel px-4">
             {historicalCases.map((summary) => (
               <HistoricalCaseRow key={summary.caseId} summary={summary} />
             ))}

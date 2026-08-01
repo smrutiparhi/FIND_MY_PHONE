@@ -69,11 +69,11 @@ export function HealthCheckPage(): ReactElement {
   }, []);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 text-slate-100">
+    <main className="flex min-h-screen items-center justify-center px-4 py-12 text-slate-100">
       <div className="w-full max-w-lg space-y-6">
         <header className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium tracking-wide text-sky-400 uppercase">RecoverAI</p>
+            <p className="text-sm font-medium tracking-wide text-cyan-300 uppercase">RecoverAI</p>
             <h1 className="text-2xl font-semibold text-white">System status</h1>
             <p className="text-sm text-slate-400">
               Signed in as {user?.email}. Diagnostics page confirming the API, database, and auth
@@ -81,20 +81,20 @@ export function HealthCheckPage(): ReactElement {
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
-            <Link to="/" className="text-sm font-medium text-sky-400 hover:text-sky-300">
+            <Link to="/dashboard" className="text-sm font-medium text-cyan-300 hover:text-cyan-300">
               Back to dashboard
             </Link>
             <button
               type="button"
               onClick={() => void signOut()}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
+              className="rounded-md border border-white/15 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/10"
             >
               Sign out
             </button>
           </div>
         </header>
 
-        <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <section className="glass-panel p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Your account</h2>
           {profile.status === 'loading' && (
             <p className="flex items-center gap-2 text-sm text-slate-400">
@@ -102,7 +102,7 @@ export function HealthCheckPage(): ReactElement {
             </p>
           )}
           {profile.status === 'error' && (
-            <p className="flex items-center gap-2 text-sm text-red-400">
+            <p className="flex items-center gap-2 text-sm text-rose-400">
               <StatusDot tone="error" /> Could not load your profile: {profile.message}
             </p>
           )}
@@ -117,7 +117,7 @@ export function HealthCheckPage(): ReactElement {
           )}
         </section>
 
-        <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <section className="glass-panel p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">API liveness</h2>
           {liveness.status === 'loading' && (
             <p className="flex items-center gap-2 text-sm text-slate-400">
@@ -125,7 +125,7 @@ export function HealthCheckPage(): ReactElement {
             </p>
           )}
           {liveness.status === 'error' && (
-            <p className="flex items-center gap-2 text-sm text-red-400">
+            <p className="flex items-center gap-2 text-sm text-rose-400">
               <StatusDot tone="error" /> Could not reach the API: {liveness.message}
             </p>
           )}
@@ -142,7 +142,7 @@ export function HealthCheckPage(): ReactElement {
           )}
         </section>
 
-        <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <section className="glass-panel p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Dependency readiness</h2>
           {readiness.status === 'loading' && (
             <p className="flex items-center gap-2 text-sm text-slate-400">
@@ -150,7 +150,7 @@ export function HealthCheckPage(): ReactElement {
             </p>
           )}
           {readiness.status === 'error' && (
-            <p className="flex items-center gap-2 text-sm text-red-400">
+            <p className="flex items-center gap-2 text-sm text-rose-400">
               <StatusDot tone="error" /> Could not reach the API: {readiness.message}
             </p>
           )}

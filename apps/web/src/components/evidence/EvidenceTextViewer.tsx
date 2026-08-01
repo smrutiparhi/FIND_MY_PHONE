@@ -10,8 +10,8 @@ interface EvidenceTextViewerProps {
 export function EvidenceTextViewer({ fileName, text, onClose }: EvidenceTextViewerProps): ReactElement {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+      <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-lg border border-white/15 bg-white/[0.04] shadow-xl">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <h3 className="text-sm font-semibold text-white">{fileName}</h3>
           <button type="button" onClick={onClose} className="text-xs text-slate-400 hover:text-slate-200">
             Close

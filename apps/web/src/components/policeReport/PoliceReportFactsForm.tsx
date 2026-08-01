@@ -54,7 +54,7 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">{title}</h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -66,7 +66,7 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
             onChange={(e) => setOwnerFullName(e.target.value)}
             required
             maxLength={150}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           />
         </label>
         <label className="text-xs text-slate-400">
@@ -78,7 +78,7 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
             required
             maxLength={200}
             placeholder="phone number or email"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
           />
         </label>
       </div>
@@ -91,7 +91,7 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
             value={incidentDateTime}
             onChange={(e) => setIncidentDateTime(e.target.value)}
             max={toDatetimeLocalValue(new Date().toISOString())}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           />
         </label>
         <label className="text-xs text-slate-400">
@@ -102,7 +102,7 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
             onChange={(e) => setLastKnownPlace(e.target.value)}
             maxLength={300}
             placeholder="leave blank if unclear"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
           />
         </label>
       </div>
@@ -115,7 +115,7 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
           required
           rows={5}
           maxLength={3000}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+          className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
         />
       </label>
 
@@ -124,12 +124,12 @@ export function PoliceReportFactsForm({ title, submitLabel, submitting, initial,
         you don&apos;t need to re-enter them here.
       </p>
 
-      {error ? <p className="text-xs text-red-400">{error}</p> : null}
+      {error ? <p className="text-xs text-rose-400">{error}</p> : null}
 
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-md bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? 'Working...' : submitLabel}
       </button>

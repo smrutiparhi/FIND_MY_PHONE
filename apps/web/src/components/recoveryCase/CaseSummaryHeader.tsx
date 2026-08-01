@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import type { Device, LocationObservation, RecoveryCase } from '@recoverai/shared';
-import { RiskBadge } from '../dashboard/RiskBadge';
-import { CaseStatusBadge } from '../dashboard/CaseStatusBadge';
-import { formatRelativeTime } from '../../lib/formatRelativeTime';
+import { formatRelativeTime } from '@recoverai/shared';
+import { RiskBadge, CaseStatusBadge } from '@recoverai/ui';
 
 const INCIDENT_LABELS: Record<RecoveryCase['incidentType'], string> = {
   LOST: 'Lost',
@@ -21,7 +20,7 @@ interface CaseSummaryHeaderProps {
 export function CaseSummaryHeader({ recoveryCase, device, latestLocation }: CaseSummaryHeaderProps): ReactElement {
   return (
     <div>
-      <Link to="/" className="text-xs text-slate-500 hover:text-slate-300">
+      <Link to="/dashboard" className="text-xs text-slate-500 hover:text-slate-300">
         &larr; Back to dashboard
       </Link>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">

@@ -44,7 +44,7 @@ export function AccessChecklistForm({ initialSignals, submitting, onSubmit }: Ac
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 glass-panel p-5">
       <div>
         <h2 className="text-sm font-semibold text-slate-300">What do you still have access to?</h2>
         <p className="mt-1 text-xs text-slate-500">
@@ -55,7 +55,7 @@ export function AccessChecklistForm({ initialSignals, submitting, onSubmit }: Ac
 
       <div className="space-y-2">
         {SIGNAL_OPTIONS.map((opt) => (
-          <label key={opt.value} className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-800 p-2.5 hover:bg-slate-800/50">
+          <label key={opt.value} className="flex cursor-pointer items-center gap-2 rounded-md border border-white/10 p-2.5 hover:bg-white/10">
             <input type="checkbox" checked={signals.has(opt.value)} onChange={() => toggle(opt.value)} />
             <span className="text-sm text-slate-200">{opt.label}</span>
           </label>
@@ -67,7 +67,7 @@ export function AccessChecklistForm({ initialSignals, submitting, onSubmit }: Ac
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-md bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? 'Saving...' : 'Save and get my recovery path'}
       </button>

@@ -27,7 +27,7 @@ export function LastSeenWhenStep({ value, onChange }: Props): ReactElement {
           onChange={(event) => onChange(event.target.value || null)}
           disabled={unknown}
           max={nowForInput()}
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none disabled:opacity-50"
+          className="w-full rounded-md input-field px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 focus:outline-none disabled:opacity-50"
         />
       </div>
       <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-400">
@@ -35,7 +35,7 @@ export function LastSeenWhenStep({ value, onChange }: Props): ReactElement {
           type="checkbox"
           checked={unknown}
           onChange={(event) => onChange(event.target.checked ? null : nowForInput())}
-          className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-sky-500 focus:ring-sky-500"
+          className="h-4 w-4 rounded border-white/20 bg-white/5 text-sky-500 focus:ring-cyan-400"
         />
         I don&apos;t remember exactly
       </label>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Device, DeviceId } from '@recoverai/shared';
 import { ApiClientError, apiGet, apiPost } from '../../lib/apiClient';
+import { Button } from '@recoverai/ui';
 import { WizardShell } from '../../components/wizard/WizardShell';
 import { IncidentTypeStep } from './steps/IncidentTypeStep';
 import { DeviceStep } from './steps/DeviceStep';
@@ -137,7 +138,7 @@ export function NewRecoveryCasePage(): ReactElement {
     try {
       const payload = buildWizardPayload(state);
       await apiPost('/api/recovery-cases', payload);
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setSubmitting(false);
       setSubmitError(describeError(err));
@@ -158,23 +159,17 @@ export function NewRecoveryCasePage(): ReactElement {
 
   if (devicesState.status === 'loading') {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 text-sm text-slate-400">
-        Loading...
-      </main>
+      <main className="flex min-h-screen items-center justify-center text-sm text-slate-400">Loading...</main>
     );
   }
 
   if (devicesState.status === 'error') {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-950 px-4 text-center text-slate-100">
-        <p className="text-sm text-red-400">Couldn&apos;t start the wizard: {devicesState.message}</p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
-        >
+      <main className="flex min-h-screen flex-col items-center justify-center gap-3 px-4 text-center text-slate-100">
+        <p className="text-sm text-rose-400">Couldn&apos;t start the wizard: {devicesState.message}</p>
+        <Button variant="secondary" onClick={() => window.location.reload()}>
           Try again
-        </button>
+        </Button>
       </main>
     );
   }

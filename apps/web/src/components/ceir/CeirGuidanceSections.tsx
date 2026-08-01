@@ -3,7 +3,7 @@ import type { CeirGuidanceSection } from '@recoverai/shared';
 
 export function CeirGuidanceSections({ sections }: { sections: CeirGuidanceSection[] }): ReactElement {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">What to know</h2>
       <dl className="mt-3 space-y-4">
         {sections.map((section) => (

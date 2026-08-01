@@ -18,3 +18,4 @@ export * from './types/timeline';
 export * from './types/deviceRecovery';
 export * from './types/notifications';
 export * from './utils/brand';
+export * from './utils/formatRelativeTime';

@@ -8,6 +8,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@recoverai/shared": "*"
+  },
   "peerDependencies": {
     "react": "^19.0.0"
   },

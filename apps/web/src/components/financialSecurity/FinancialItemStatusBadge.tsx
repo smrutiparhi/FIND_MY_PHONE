@@ -2,10 +2,10 @@ import type { ReactElement } from 'react';
 import type { FinancialProtectionStatus } from '@recoverai/shared';
 
 const STATUS_STYLES: Record<FinancialProtectionStatus, string> = {
-  NOT_STARTED: 'border-slate-700 bg-slate-800 text-slate-400',
+  NOT_STARTED: 'border-white/15 bg-white/5 text-slate-400',
   IN_PROGRESS: 'border-amber-900 bg-amber-950 text-amber-300',
-  CONFIRMED_BY_USER: 'border-emerald-900 bg-emerald-950 text-emerald-300',
-  CONFIRMED_BY_INTEGRATION: 'border-emerald-900 bg-emerald-950 text-emerald-300',
+  CONFIRMED_BY_USER: 'glass-panel-success text-emerald-300',
+  CONFIRMED_BY_INTEGRATION: 'glass-panel-success text-emerald-300',
 };
 
 const STATUS_LABELS: Record<FinancialProtectionStatus, string> = {

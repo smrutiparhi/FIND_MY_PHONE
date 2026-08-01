@@ -34,7 +34,7 @@ export function PoliceReportDraftView({ draftText, isSimulated, submitting, expo
   }
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="glass-panel p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-slate-300">Complaint draft</h2>
         {isSimulated ? (
@@ -50,10 +50,10 @@ export function PoliceReportDraftView({ draftText, isSimulated, submitting, expo
           onChange={(e) => setDraft(e.target.value)}
           rows={16}
           maxLength={10000}
-          className="mt-3 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-white"
+          className="mt-3 w-full rounded-md input-field px-3 py-2 font-mono text-xs text-white"
         />
       ) : (
-        <pre className="mt-3 max-h-[28rem] overflow-y-auto whitespace-pre-wrap rounded-md border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-200">
+        <pre className="mt-3 max-h-[28rem] overflow-y-auto whitespace-pre-wrap glass-panel-inset rounded-2xl p-3 font-mono text-xs text-slate-200">
           {draftText}
         </pre>
       )}
@@ -65,7 +65,7 @@ export function PoliceReportDraftView({ draftText, isSimulated, submitting, expo
               type="button"
               disabled={submitting}
               onClick={() => void handleSave()}
-              className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save
             </button>
@@ -75,7 +75,7 @@ export function PoliceReportDraftView({ draftText, isSimulated, submitting, expo
                 setDraft(draftText);
                 setEditing(false);
               }}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+              className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
             >
               Cancel
             </button>
@@ -84,7 +84,7 @@ export function PoliceReportDraftView({ draftText, isSimulated, submitting, expo
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
           >
             Edit
           </button>
@@ -92,7 +92,7 @@ export function PoliceReportDraftView({ draftText, isSimulated, submitting, expo
         <button
           type="button"
           onClick={() => downloadTextFile(exportFileName, draftText)}
-          className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+          className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
         >
           Export
         </button>

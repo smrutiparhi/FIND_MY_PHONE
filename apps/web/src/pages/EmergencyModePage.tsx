@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Device, EmergencyModeResult } from '@recoverai/shared';
 import { ApiClientError, apiGet, apiPatch } from '../lib/apiClient';
-import { RiskBadge } from '../components/dashboard/RiskBadge';
+import { RiskBadge, EmergencyBanner, ErrorState } from '@recoverai/ui';
 import { EmergencyActionCard } from '../components/emergencyMode/EmergencyActionCard';
 import { NextActionPreview } from '../components/emergencyMode/NextActionPreview';
 
@@ -59,22 +59,12 @@ export function EmergencyModePage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load emergency mode.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load emergency mode." message={state.message} onRetry={load} />
     );
   }
 
@@ -95,14 +85,19 @@ export function EmergencyModePage(): ReactElement {
       </div>
 
       {!emergency.isEmergency ? (
-        <div className="rounded-md border border-emerald-900 bg-emerald-950/40 p-4 text-sm text-emerald-300">
+        <div className="glass-panel-success p-4 text-sm text-emerald-300">
           This case is no longer at critical or high risk - emergency mode isn&apos;t needed right now. See the full
           recovery plan for anything still open.
         </div>
       ) : (
         <>
+          <EmergencyBanner
+            title="Critical situation - act now"
+            description="This case is at critical or high risk. Work through the step below before anything else."
+          />
+
           {emergency.riskReasons.length > 0 ? (
-            <div className="rounded-md border border-slate-800 bg-slate-900 p-4">
+            <div className="glass-panel p-4">
               <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">Why risk is high</p>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
                 {emergency.riskReasons.map((reason) => (
@@ -113,9 +108,9 @@ export function EmergencyModePage(): ReactElement {
           ) : null}
 
           {emergency.warnings.length > 0 ? (
-            <div className="space-y-1 rounded-md border border-red-900 bg-red-950/60 p-3">
+            <div className="space-y-1 glass-panel-danger p-3">
               {emergency.warnings.map((warning) => (
-                <p key={warning} className="text-xs text-red-300">
+                <p key={warning} className="text-xs text-rose-300">
                   {warning}
                 </p>
               ))}
@@ -126,12 +121,12 @@ export function EmergencyModePage(): ReactElement {
             {emergency.completedCount} of {emergency.totalCount} protections completed
           </p>
 
-          {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+          {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
           {currentAction ? (
             <EmergencyActionCard action={currentAction} submitting={submitting} onMarkDone={() => handleMarkDone(currentAction.id)} />
           ) : (
-            <div className="rounded-lg border border-emerald-900 bg-emerald-950/40 p-5 text-sm text-emerald-300">
+            <div className="glass-panel-success p-5 text-sm text-emerald-300">
               Every critical protection is complete. See the full recovery plan for what&apos;s left.
             </div>
           )}

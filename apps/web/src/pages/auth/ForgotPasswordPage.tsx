@@ -1,9 +1,8 @@
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '../../components/auth/AuthLayout';
-import { FormField } from '../../components/auth/FormField';
 import { FormMessage } from '../../components/auth/FormMessage';
-import { AuthSubmitButton } from '../../components/auth/AuthSubmitButton';
+import { FormField, Button } from '@recoverai/ui';
 import { supabase } from '../../lib/supabaseClient';
 
 const GENERIC_SENT_MESSAGE =
@@ -34,7 +33,7 @@ export function ForgotPasswordPage(): ReactElement {
       title="Reset your password"
       subtitle="We'll email you a link to choose a new one"
       footer={
-        <Link to="/login" className="font-medium text-sky-400 hover:text-sky-300">
+        <Link to="/login" className="font-medium text-cyan-300 hover:text-cyan-300">
           Back to sign in
         </Link>
       }
@@ -52,9 +51,9 @@ export function ForgotPasswordPage(): ReactElement {
             autoComplete="email"
             required
           />
-          <AuthSubmitButton disabled={submitting}>
+          <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
             {submitting ? 'Sending...' : 'Send reset link'}
-          </AuthSubmitButton>
+          </Button>
         </form>
       )}
     </AuthLayout>

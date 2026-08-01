@@ -55,14 +55,14 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5 glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Notification preferences</h2>
 
       <div>
         <p className="text-xs font-medium text-slate-400">Notification types</p>
         <div className="mt-2 space-y-1.5">
           <label className="flex items-center gap-2 text-xs text-slate-500">
-            <input type="checkbox" checked disabled className="h-4 w-4 rounded border-slate-700 bg-slate-800" />
+            <input type="checkbox" checked disabled className="h-4 w-4 rounded border-white/15 bg-white/5" />
             {NOTIFICATION_TYPE_LABELS[NON_MUTABLE_TYPE]} (always on - cannot be muted)
           </label>
           {MUTABLE_TYPES.map((type) => (
@@ -71,7 +71,7 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
                 type="checkbox"
                 checked={!mutedTypes.includes(type)}
                 onChange={() => toggleMuted(type)}
-                className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+                className="h-4 w-4 rounded border-white/20 bg-white/[0.04]"
               />
               {NOTIFICATION_TYPE_LABELS[type]}
             </label>
@@ -85,7 +85,7 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
             type="checkbox"
             checked={quietHoursEnabled}
             onChange={(e) => setQuietHoursEnabled(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+            className="h-4 w-4 rounded border-white/20 bg-white/[0.04]"
           />
           Quiet hours (does not apply to critical alerts)
         </label>
@@ -97,7 +97,7 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
                 type="time"
                 value={quietStart}
                 onChange={(e) => setQuietStart(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+                className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
               />
             </label>
             <label className="text-xs text-slate-400">
@@ -106,7 +106,7 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
                 type="time"
                 value={quietEnd}
                 onChange={(e) => setQuietEnd(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+                className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
               />
             </label>
             <label className="text-xs text-slate-400">
@@ -116,7 +116,7 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
                 placeholder="e.g. Asia/Kolkata"
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
+                className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
               />
             </label>
           </div>
@@ -130,16 +130,16 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
             type="checkbox"
             checked={emailEnabled}
             onChange={(e) => setEmailEnabled(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+            className="h-4 w-4 rounded border-white/20 bg-white/[0.04]"
           />
           Email (coming soon - no email provider is connected yet, so this has no effect)
         </label>
         <label className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
-          <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-700 bg-slate-800" />
+          <input type="checkbox" disabled className="h-4 w-4 rounded border-white/15 bg-white/5" />
           Push notifications (not available yet)
         </label>
         <label className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
-          <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-700 bg-slate-800" />
+          <input type="checkbox" disabled className="h-4 w-4 rounded border-white/15 bg-white/5" />
           SMS (not available yet)
         </label>
       </div>
@@ -147,7 +147,7 @@ export function NotificationPreferencesForm({ preferences, submitting, onSave }:
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Save preferences
       </button>

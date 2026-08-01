@@ -19,7 +19,7 @@ export function AddFinancialItemForm({ categoryGuides, submitting, onSubmit }: A
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Track something on the device</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs text-slate-400">
@@ -27,7 +27,7 @@ export function AddFinancialItemForm({ categoryGuides, submitting, onSubmit }: A
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as FinancialItemCategory)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           >
             {categoryGuides.map((guide) => (
               <option key={guide.category} value={guide.category}>
@@ -44,14 +44,14 @@ export function AddFinancialItemForm({ categoryGuides, submitting, onSubmit }: A
             onChange={(e) => setLabel(e.target.value)}
             placeholder="e.g. HDFC Bank, Google Pay"
             maxLength={150}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
           />
         </label>
       </div>
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Add
       </button>

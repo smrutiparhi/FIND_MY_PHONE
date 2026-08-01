@@ -43,13 +43,13 @@ function buildSummaryText(summary: FinalCaseSummary): string {
 /** "Create a final case summary containing: incident date, recovery date, actions completed, important status changes, location observations, police status, CEIR status" (master spec, verbatim field list) - the user's own closing record, not a redacted share-out (compare Part 16's sanitized Timeline export). */
 export function FinalCaseSummaryView({ summary }: { summary: FinalCaseSummary }): ReactElement {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="glass-panel p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-slate-300">Final case summary</h2>
         <button
           type="button"
           onClick={() => downloadTextFile('recoverai-final-case-summary.txt', buildSummaryText(summary))}
-          className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+          className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
         >
           Download (.txt)
         </button>

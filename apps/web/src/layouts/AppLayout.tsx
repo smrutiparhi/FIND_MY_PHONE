@@ -4,7 +4,7 @@ import type { NotificationListState } from '@recoverai/shared';
 import { apiGet } from '../lib/apiClient';
 
 const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
-  { to: '/', label: 'Dashboard', end: true },
+  { to: '/dashboard', label: 'Dashboard', end: true },
   { to: '/devices', label: 'My Devices' },
   { to: '/recovery-cases', label: 'Recovery Cases' },
   { to: '/evidence', label: 'Evidence' },
@@ -14,8 +14,10 @@ const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
 
 function navLinkClasses({ isActive }: { isActive: boolean }): string {
   return [
-    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
-    isActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
+    'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+    isActive
+      ? 'bg-cyan-400/10 text-white shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]'
+      : 'text-slate-300 hover:bg-white/10 hover:text-white',
   ].join(' ');
 }
 
@@ -50,7 +52,7 @@ export function AppLayout(): ReactElement {
       <span className="inline-flex items-center gap-1.5">
         {item.label}
         {item.to === '/notifications' && unreadCount > 0 ? (
-          <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+          <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : null}
@@ -59,10 +61,10 @@ export function AppLayout(): ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800">
+    <div className="min-h-screen text-slate-100">
+      <header className="glass-header sticky top-0 z-40">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/" className="text-sm font-semibold tracking-wide text-sky-400 uppercase">
+          <Link to="/dashboard" className="font-display text-sm font-semibold tracking-[0.2em] text-gradient uppercase">
             RecoverAI
           </Link>
 
@@ -76,7 +78,7 @@ export function AppLayout(): ReactElement {
 
           <button
             type="button"
-            className="rounded-md p-2 text-slate-300 hover:bg-slate-800 md:hidden"
+            className="rounded-md p-2 text-slate-300 hover:bg-white/10 md:hidden"
             onClick={() => setMobileNavOpen((open) => !open)}
             aria-expanded={mobileNavOpen}
             aria-controls="mobile-nav"
@@ -89,7 +91,7 @@ export function AppLayout(): ReactElement {
         </div>
 
         {mobileNavOpen ? (
-          <nav id="mobile-nav" className="border-t border-slate-800 px-4 py-2 md:hidden" aria-label="Main navigation">
+          <nav id="mobile-nav" className="border-t border-white/10 px-4 py-2 md:hidden" aria-label="Main navigation">
             <div className="flex flex-col gap-1 py-1">
               {NAV_ITEMS.map((item) => (
                 <NavLink

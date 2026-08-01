@@ -1,9 +1,8 @@
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../../components/auth/AuthLayout';
-import { FormField } from '../../components/auth/FormField';
 import { FormMessage } from '../../components/auth/FormMessage';
-import { AuthSubmitButton } from '../../components/auth/AuthSubmitButton';
+import { FormField, Button } from '@recoverai/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -20,7 +19,7 @@ export function RegisterPage(): ReactElement {
   const [checkEmailMessage, setCheckEmailMessage] = useState<string | null>(null);
 
   if (!loading && session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   async function handleSubmit(event: FormEvent): Promise<void> {
@@ -47,7 +46,7 @@ export function RegisterPage(): ReactElement {
 
     if (data.session) {
       // Email confirmation is disabled on this project - signed in immediately.
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
       return;
     }
 
@@ -63,7 +62,7 @@ export function RegisterPage(): ReactElement {
         <FormMessage tone="success">{checkEmailMessage}</FormMessage>
         <Link
           to="/login"
-          className="mt-4 block text-center text-sm font-medium text-sky-400 hover:text-sky-300"
+          className="mt-4 block text-center text-sm font-medium text-cyan-300 hover:text-cyan-300"
         >
           Back to sign in
         </Link>
@@ -78,7 +77,7 @@ export function RegisterPage(): ReactElement {
       footer={
         <p>
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-sky-400 hover:text-sky-300">
+          <Link to="/login" className="font-medium text-cyan-300 hover:text-cyan-300">
             Sign in
           </Link>
         </p>
@@ -115,9 +114,9 @@ export function RegisterPage(): ReactElement {
           minLength={MIN_PASSWORD_LENGTH}
           required
         />
-        <AuthSubmitButton disabled={submitting}>
+        <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
           {submitting ? 'Creating account...' : 'Create account'}
-        </AuthSubmitButton>
+        </Button>
       </form>
     </AuthLayout>
   );

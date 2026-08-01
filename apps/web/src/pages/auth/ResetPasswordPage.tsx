@@ -1,9 +1,8 @@
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../../components/auth/AuthLayout';
-import { FormField } from '../../components/auth/FormField';
 import { FormMessage } from '../../components/auth/FormMessage';
-import { AuthSubmitButton } from '../../components/auth/AuthSubmitButton';
+import { FormField, Button } from '@recoverai/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -44,7 +43,7 @@ export function ResetPasswordPage(): ReactElement {
       setError(updateError.message);
       return;
     }
-    navigate('/', { replace: true });
+    navigate('/dashboard', { replace: true });
   }
 
   if (loading) {
@@ -61,7 +60,7 @@ export function ResetPasswordPage(): ReactElement {
         title="Link expired"
         subtitle="This password reset link is invalid or has expired"
         footer={
-          <Link to="/forgot-password" className="font-medium text-sky-400 hover:text-sky-300">
+          <Link to="/forgot-password" className="font-medium text-cyan-300 hover:text-cyan-300">
             Request a new link
           </Link>
         }
@@ -97,9 +96,9 @@ export function ResetPasswordPage(): ReactElement {
           minLength={MIN_PASSWORD_LENGTH}
           required
         />
-        <AuthSubmitButton disabled={submitting}>
+        <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
           {submitting ? 'Saving...' : 'Save new password'}
-        </AuthSubmitButton>
+        </Button>
       </form>
     </AuthLayout>
   );

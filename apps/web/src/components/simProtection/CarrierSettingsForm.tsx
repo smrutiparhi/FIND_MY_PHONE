@@ -26,7 +26,7 @@ export function CarrierSettingsForm({ currentCarrier, currentSimType, submitting
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Update your carrier</h2>
       <label className="block text-xs text-slate-400">
         Carrier / network provider
@@ -36,7 +36,7 @@ export function CarrierSettingsForm({ currentCarrier, currentSimType, submitting
           onChange={(e) => setCarrier(e.target.value)}
           placeholder="e.g. Jio, Airtel, Vi, BSNL"
           maxLength={100}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
+          className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
         />
       </label>
       <label className="block text-xs text-slate-400">
@@ -44,7 +44,7 @@ export function CarrierSettingsForm({ currentCarrier, currentSimType, submitting
         <select
           value={simType}
           onChange={(e) => setSimType(e.target.value as SimType)}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+          className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
         >
           {SIM_TYPE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -56,7 +56,7 @@ export function CarrierSettingsForm({ currentCarrier, currentSimType, submitting
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Save
       </button>

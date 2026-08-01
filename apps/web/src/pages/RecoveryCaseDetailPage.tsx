@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Device, LocationObservation, RecoveryCase, RecoveryCaseId, RecoveryPlan, TimelineEvent } from '@recoverai/shared';
 import { ApiClientError, apiGet, apiPatch } from '../lib/apiClient';
+import { EmergencyBanner, ErrorState, buttonClasses } from '@recoverai/ui';
 import { CaseSummaryHeader } from '../components/recoveryCase/CaseSummaryHeader';
 import { RecoveryProgressCard } from '../components/recoveryCase/RecoveryProgressCard';
 import { DashboardSectionCard } from '../components/recoveryCase/DashboardSectionCard';
@@ -84,23 +85,15 @@ export function RecoveryCaseDetailPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading case...</div>;
+    return (
+      <div role="status" className="text-sm text-slate-400">
+        Loading case...
+      </div>
+    );
   }
 
   if (state.status === 'error') {
-    return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load this case.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
-    );
+    return <ErrorState title="Couldn't load this case." message={state.message} onRetry={load} />;
   }
 
   const { recoveryCase, device, recoveryPlan, latestLocation, latestTimelineEvents } = state.data;
@@ -111,28 +104,27 @@ export function RecoveryCaseDetailPage(): ReactElement {
   return (
     <div className="space-y-6">
       {isEmergency ? (
-        <Link
-          to={`/recovery-cases/${recoveryCase.id}/emergency`}
-          className="flex items-center justify-between gap-3 rounded-lg border border-red-800 bg-red-950 px-4 py-3 text-sm font-semibold text-red-200 hover:bg-red-900"
-        >
-          <span>This case is high risk - open the focused emergency view for just the next critical step.</span>
-          <span aria-hidden="true">&rarr;</span>
-        </Link>
+        <EmergencyBanner
+          title="This case is high risk"
+          description="Open the focused emergency view for just the next critical step."
+          cta={
+            <Link to={`/recovery-cases/${recoveryCase.id}/emergency`} className={buttonClasses('danger', 'sm')}>
+              Open emergency view &rarr;
+            </Link>
+          }
+        />
       ) : null}
 
       <CaseSummaryHeader recoveryCase={recoveryCase} device={device} latestLocation={latestLocation} />
 
       {recoveryCase.status !== 'CLOSED' ? (
-        <Link
-          to={`/recovery-cases/${caseIdTyped}/recovered`}
-          className="flex items-center justify-between gap-3 rounded-lg border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40"
-        >
+        <Link to={`/recovery-cases/${caseIdTyped}/recovered`} className="glass-panel-success glass-panel-hover flex items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-emerald-200">
           <span>I found my phone</span>
           <span aria-hidden="true">&rarr;</span>
         </Link>
       ) : null}
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       <RecoveryProgressCard caseId={caseIdTyped} plan={recoveryPlan} submitting={submitting} onMarkActionDone={handleMarkActionDone} />
 
@@ -152,7 +144,7 @@ export function RecoveryCaseDetailPage(): ReactElement {
             );
           })}
 
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+          <div className="glass-panel p-4">
             <h3 className="text-sm font-semibold text-slate-200">Timeline</h3>
             {latestTimelineEvents.length === 0 ? (
               <p className="mt-1.5 text-xs text-slate-500">Nothing recorded yet.</p>
@@ -166,7 +158,7 @@ export function RecoveryCaseDetailPage(): ReactElement {
               </ul>
             )}
             <div className="mt-3">
-              <Link to={`/recovery-cases/${caseIdTyped}/timeline`} className="text-xs font-medium text-sky-400 hover:underline">
+              <Link to={`/recovery-cases/${caseIdTyped}/timeline`} className="text-xs font-medium text-cyan-300 hover:underline">
                 View &rarr;
               </Link>
             </div>

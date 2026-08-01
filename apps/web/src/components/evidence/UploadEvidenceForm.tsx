@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
 import { EVIDENCE_ALLOWED_MIME_TYPES, EVIDENCE_CATEGORIES, EVIDENCE_MAX_FILE_SIZE_BYTES, type EvidenceCategory } from '@recoverai/shared';
-import { evidenceCategoryLabel } from './evidenceCategoryLabels';
+import { evidenceCategoryLabel } from '@recoverai/ui';
 
 interface UploadEvidenceFormProps {
   submitting: boolean;
@@ -46,7 +46,7 @@ export function UploadEvidenceForm({ submitting, onSubmit }: UploadEvidenceFormP
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Upload evidence</h2>
 
       <label className="block text-xs text-slate-400">
@@ -54,7 +54,7 @@ export function UploadEvidenceForm({ submitting, onSubmit }: UploadEvidenceFormP
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as EvidenceCategory)}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+          className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
         >
           {EVIDENCE_CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -72,7 +72,7 @@ export function UploadEvidenceForm({ submitting, onSubmit }: UploadEvidenceFormP
           onChange={(e) => setDescription(e.target.value)}
           maxLength={500}
           placeholder="e.g. Invoice from the store where I bought the phone"
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
+          className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white placeholder:text-slate-600"
         />
       </label>
 
@@ -83,17 +83,17 @@ export function UploadEvidenceForm({ submitting, onSubmit }: UploadEvidenceFormP
           type="file"
           accept={EVIDENCE_ALLOWED_MIME_TYPES.join(',')}
           onChange={handleFileChange}
-          className="mt-1 block w-full text-xs text-slate-300 file:mr-3 file:rounded-md file:border file:border-slate-700 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700"
+          className="mt-1 block w-full text-xs text-slate-300 file:mr-3 file:rounded-md file:border file:border-white/15 file:bg-white/5 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700"
         />
         <span className="mt-1 block text-[11px] text-slate-500">JPEG, PNG, WEBP, or PDF - up to {MAX_SIZE_LABEL}.</span>
       </label>
 
-      {localError ? <p className="text-xs text-red-400">{localError}</p> : null}
+      {localError ? <p className="text-xs text-rose-400">{localError}</p> : null}
 
       <button
         type="submit"
         disabled={submitting || !file}
-        className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? 'Uploading...' : 'Upload'}
       </button>

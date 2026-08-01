@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import type { Device, DeviceId, PlatformType } from '@recoverai/shared';
 import { OptionButton } from '../../../components/wizard/OptionButton';
-import { FormField } from '../../../components/auth/FormField';
+import { FormField, DeviceCard } from '@recoverai/ui';
 
 interface NewDeviceFields {
   nickname: string;
@@ -42,12 +42,11 @@ export function DeviceStep({
       {devices.length > 0 ? (
         <div className="space-y-2">
           {devices.map((device) => (
-            <OptionButton
+            <DeviceCard
               key={device.id}
+              device={device}
               selected={deviceMode === 'existing' && existingDeviceId === device.id}
               onClick={() => onSelectExisting(device.id)}
-              label={device.nickname}
-              description={`${device.manufacturer} ${device.model}`}
             />
           ))}
           <OptionButton
@@ -60,7 +59,7 @@ export function DeviceStep({
       ) : null}
 
       {showNewDeviceForm ? (
-        <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-4">
+        <div className="space-y-3 glass-panel p-4">
           <FormField
             id="nickname"
             label="What do you call this device?"

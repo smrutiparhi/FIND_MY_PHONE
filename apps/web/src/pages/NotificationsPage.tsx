@@ -3,6 +3,7 @@ import type { Notification, NotificationListState, UpdateNotificationPreferences
 import { ApiClientError, apiGet, apiPatch, apiPost } from '../lib/apiClient';
 import { NotificationItem } from '../components/notifications/NotificationItem';
 import { NotificationPreferencesForm } from '../components/notifications/NotificationPreferencesForm';
+import { ErrorState } from '@recoverai/ui';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -69,22 +70,12 @@ export function NotificationsPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading notifications...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading notifications...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load notifications.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load notifications." message={state.message} onRetry={load} />
     );
   }
 
@@ -101,7 +92,7 @@ export function NotificationsPage(): ReactElement {
           <button
             type="button"
             onClick={() => setUnreadOnly((v) => !v)}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
           >
             {unreadOnly ? 'Show all' : 'Show unread only'}
           </button>
@@ -109,17 +100,17 @@ export function NotificationsPage(): ReactElement {
             type="button"
             disabled={submitting || unreadCount === 0}
             onClick={() => void handleMarkAllRead()}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Mark all read
           </button>
         </div>
       </div>
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <div className="glass-panel p-5">
           <h2 className="text-sm font-semibold text-slate-300">
             {unreadOnly ? 'Unread' : 'All'} ({notifications.length})
           </h2>

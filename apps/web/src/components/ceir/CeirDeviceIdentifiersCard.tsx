@@ -10,7 +10,7 @@ const ROWS: { key: keyof CeirDeviceIdentifiers; label: string }[] = [
 /** Decrypted only for the confirmed owner (see repos.devices.getDecryptedImei1/2/SerialNumber) - shown so it can be copied straight into the CEIR form. */
 export function CeirDeviceIdentifiersCard({ identifiers }: { identifiers: CeirDeviceIdentifiers }): ReactElement {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Your device identifiers</h2>
       <p className="mt-1 text-xs text-slate-500">Copy these into the CEIR form.</p>
       <dl className="mt-3 space-y-2">

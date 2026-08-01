@@ -15,8 +15,8 @@ export function OptionButton({ selected, onClick, label, description }: OptionBu
       aria-pressed={selected}
       className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
         selected
-          ? 'border-sky-500 bg-sky-950/60 text-white'
-          : 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-600'
+          ? 'border-cyan-400 bg-cyan-400/10 text-white'
+          : 'border-white/15 bg-white/[0.04] text-slate-200 hover:border-white/30'
       }`}
     >
       <span className="block text-sm font-medium">{label}</span>

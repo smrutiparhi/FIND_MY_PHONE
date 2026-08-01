@@ -113,7 +113,7 @@ export function DeviceMap({ config, observations, onPickLocation }: DeviceMapPro
 
   if (!tileTemplate) {
     return (
-      <div className="flex h-72 flex-col items-center justify-center gap-1 rounded-lg border border-slate-800 bg-slate-900 text-center">
+      <div className="flex h-72 flex-col items-center justify-center gap-1 glass-panel text-center">
         <p className="text-sm font-medium text-slate-300">Map unavailable</p>
         <p className="max-w-xs text-xs text-slate-500">
           No map provider is configured. Coordinates, timestamps, and source information are still shown below.
@@ -122,7 +122,7 @@ export function DeviceMap({ config, observations, onPickLocation }: DeviceMapPro
     );
   }
 
-  return <div ref={containerRef} className="h-72 w-full rounded-lg border border-slate-800" />;
+  return <div ref={containerRef} className="h-72 w-full rounded-lg border border-white/10" />;
 }
 
 function popupHtml(obs: LocationObservation, isLatest: boolean): string {

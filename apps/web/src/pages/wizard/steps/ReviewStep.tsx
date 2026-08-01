@@ -45,7 +45,7 @@ function ReviewRow({ label, value }: { label: string; value: string }): ReactEle
 export function ReviewStep({ state, deviceLabel, submitting, error }: Props): ReactElement {
   return (
     <div className="space-y-3">
-      <div className="divide-y divide-slate-800 rounded-lg border border-slate-800 bg-slate-900 px-4 text-sm">
+      <div className="divide-y divide-white/10 glass-panel px-4 text-sm">
         <ReviewRow label="What happened" value={INCIDENT_LABELS[state.incidentType ?? ''] ?? 'Unknown'} />
         <ReviewRow label="Device" value={deviceLabel} />
         <ReviewRow
@@ -66,7 +66,7 @@ export function ReviewStep({ state, deviceLabel, submitting, error }: Props): Re
       </div>
 
       {error ? (
-        <div className="rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-300" role="alert">
+        <div className="glass-panel-danger px-3 py-2 text-sm text-rose-300" role="alert">
           {error}
         </div>
       ) : null}

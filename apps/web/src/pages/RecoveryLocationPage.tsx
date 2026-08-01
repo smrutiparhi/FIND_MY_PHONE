@@ -5,6 +5,7 @@ import { ApiClientError, apiGet, apiPost } from '../lib/apiClient';
 import { DeviceMap } from '../components/recoveryLocation/DeviceMap';
 import { RecordLocationForm } from '../components/recoveryLocation/RecordLocationForm';
 import { LocationHistoryList } from '../components/recoveryLocation/LocationHistoryList';
+import { ErrorState, buttonClasses } from '@recoverai/ui';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -76,22 +77,12 @@ export function RecoveryLocationPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading location data...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading location data...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load this case&apos;s location data.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load this case's location data." message={state.message} onRetry={load} />
     );
   }
 
@@ -113,18 +104,13 @@ export function RecoveryLocationPage(): ReactElement {
       </div>
 
       {findingAction?.officialExternalAction?.url ? (
-        <a
-          href={findingAction.officialExternalAction.url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center rounded-md bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-500"
-        >
+        <a href={findingAction.officialExternalAction.url} target="_blank" rel="noreferrer" className={buttonClasses('primary', 'md')}>
           {findingAction.officialExternalAction.label}
         </a>
       ) : null}
 
       {showSafetyWarning ? (
-        <div className="rounded-md border border-red-900 bg-red-950/60 p-4 text-sm text-red-300">
+        <div className="glass-panel-danger p-4 text-sm text-rose-300">
           If this device appears at an unfamiliar location, do not go there or confront a suspected thief - share
           the information with the police instead.
         </div>
@@ -147,7 +133,7 @@ export function RecoveryLocationPage(): ReactElement {
         <LocationHistoryList observations={observations} />
       </div>
 
-      {submitError ? <p className="text-sm text-red-400">{submitError}</p> : null}
+      {submitError ? <p className="text-sm text-rose-400">{submitError}</p> : null}
     </div>
   );
 }

@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import type { CaseSummaryExport, CreateTimelineNoteInput, TimelineEvent, TimelineOrder } from '@recoverai/shared';
 import { ApiClientError, apiDelete, apiGet, apiPatch, apiPost } from '../lib/apiClient';
 import { AddTimelineNoteForm } from '../components/timeline/AddTimelineNoteForm';
-import { TimelineEventItem } from '../components/timeline/TimelineEventItem';
+import { TimelineItem, ErrorState } from '@recoverai/ui';
+import { TIMELINE_EVENT_TYPE_LABELS } from '../components/timeline/timelineEventLabels';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -103,22 +104,12 @@ export function TimelinePage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading timeline...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading timeline...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load the timeline.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load the timeline." message={state.message} onRetry={load} />
     );
   }
 
@@ -134,7 +125,7 @@ export function TimelinePage(): ReactElement {
             <button
               type="button"
               onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+              className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10"
             >
               {order === 'desc' ? 'Newest first' : 'Oldest first'} (switch)
             </button>
@@ -142,7 +133,7 @@ export function TimelinePage(): ReactElement {
               type="button"
               disabled={exporting}
               onClick={() => void handleExport()}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {exporting ? 'Exporting...' : 'Export summary (.txt)'}
             </button>
@@ -154,19 +145,20 @@ export function TimelinePage(): ReactElement {
         </p>
       </div>
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <div className="glass-panel p-5">
           <h2 className="text-sm font-semibold text-slate-300">Events ({state.events.length})</h2>
           {state.events.length === 0 ? (
             <p className="mt-2 text-sm text-slate-500">Nothing recorded yet.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {state.events.map((event) => (
-                <TimelineEventItem
+                <TimelineItem
                   key={event.id}
                   event={event}
+                  typeLabel={TIMELINE_EVENT_TYPE_LABELS[event.type]}
                   submitting={submitting}
                   onEditNote={handleEditNote}
                   onDeleteNote={handleDeleteNote}

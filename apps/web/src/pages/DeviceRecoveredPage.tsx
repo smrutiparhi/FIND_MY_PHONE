@@ -10,6 +10,7 @@ import { ApiClientError, apiGet, apiPatch, apiPost } from '../lib/apiClient';
 import { DeviceRecoveryChecklistRow } from '../components/deviceRecovery/DeviceRecoveryChecklistRow';
 import { CloseCasePanel } from '../components/deviceRecovery/CloseCasePanel';
 import { FinalCaseSummaryView } from '../components/deviceRecovery/FinalCaseSummaryView';
+import { ErrorState } from '@recoverai/ui';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -120,22 +121,12 @@ export function DeviceRecoveredPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load this page.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load this page." message={state.message} onRetry={load} />
     );
   }
 
@@ -149,17 +140,17 @@ export function DeviceRecoveredPage(): ReactElement {
         <Link to={`/recovery-cases/${caseIdTyped}`} className="text-xs text-slate-500 hover:text-slate-300">
           &larr; Back to case
         </Link>
-        <div className="rounded-lg border border-emerald-900 bg-emerald-950/40 p-6 text-center">
+        <div className="glass-panel-success p-6 text-center">
           <h1 className="text-xl font-semibold text-white">I found my phone</h1>
           <p className="mt-2 text-sm text-slate-300">
             Before we do anything else - do you have physical possession of the device right now?
           </p>
-          {actionError ? <p className="mt-2 text-sm text-red-400">{actionError}</p> : null}
+          {actionError ? <p className="mt-2 text-sm text-rose-400">{actionError}</p> : null}
           <button
             type="button"
             disabled={submitting}
             onClick={() => void handleConfirmPossession()}
-            className="mt-4 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-4 rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Yes, I have the device
           </button>
@@ -184,10 +175,10 @@ export function DeviceRecoveredPage(): ReactElement {
         </p>
       </div>
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       {!isClosed ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <div className="glass-panel p-5">
           <h2 className="text-sm font-semibold text-slate-300">Recovery checklist</h2>
           <ul className="mt-3 space-y-2">
             {DEVICE_RECOVERY_CHECKLIST_ITEMS.filter((i) => i !== 'CONFIRM_POSSESSION').map((item) => (

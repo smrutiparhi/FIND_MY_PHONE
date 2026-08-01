@@ -14,6 +14,7 @@ import { PoliceReportDraftView } from '../components/policeReport/PoliceReportDr
 import { PoliceReportStatusBadge } from '../components/policeReport/PoliceReportStatusBadge';
 import { PoliceReportApprovalActions } from '../components/policeReport/PoliceReportApprovalActions';
 import { PoliceReportVersionHistory } from '../components/policeReport/PoliceReportVersionHistory';
+import { ErrorState } from '@recoverai/ui';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -131,22 +132,12 @@ export function PoliceReportPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading police complaint assistant...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading police complaint assistant...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load the Police Complaint Assistant.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load the Police Complaint Assistant." message={state.message} onRetry={load} />
     );
   }
 
@@ -167,7 +158,7 @@ export function PoliceReportPage(): ReactElement {
     return (
       <div className="space-y-6">
         {header(state.recoveryCase)}
-        {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+        {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
         <PoliceReportFactsForm
           title="Tell us what happened"
           submitLabel="Generate draft complaint"
@@ -198,7 +189,7 @@ export function PoliceReportPage(): ReactElement {
         ) : null}
       </div>
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       {regenerating ? (
         <PoliceReportFactsForm

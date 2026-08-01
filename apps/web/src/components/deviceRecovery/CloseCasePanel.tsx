@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import type { RecoveryPlanAction } from '@recoverai/shared';
-import { ActionStatusBadge } from '../recoveryCase/ActionStatusBadge';
+import { ActionStatusBadge } from '@recoverai/ui';
 
 interface CloseCasePanelProps {
   unresolvedActions: RecoveryPlanAction[];
@@ -13,7 +13,7 @@ export function CloseCasePanel({ unresolvedActions, submitting, onClose }: Close
   const [reviewed, setReviewed] = useState(false);
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Close this case</h2>
 
       {unresolvedActions.length > 0 ? (
@@ -23,7 +23,7 @@ export function CloseCasePanel({ unresolvedActions, submitting, onClose }: Close
           </p>
           <ul className="mt-2 space-y-1.5">
             {unresolvedActions.map((action) => (
-              <li key={action.id} className="flex items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/60 px-3 py-1.5">
+              <li key={action.id} className="flex items-center justify-between gap-2 glass-panel-inset rounded-2xl px-3 py-1.5">
                 <span className="text-xs text-slate-300">{action.title}</span>
                 <ActionStatusBadge status={action.status} />
               </li>
@@ -39,7 +39,7 @@ export function CloseCasePanel({ unresolvedActions, submitting, onClose }: Close
           type="checkbox"
           checked={reviewed}
           onChange={(e) => setReviewed(e.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-900"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/[0.04]"
         />
         <span>I&apos;ve reviewed the unresolved actions above and want to close this case anyway.</span>
       </label>
@@ -48,7 +48,7 @@ export function CloseCasePanel({ unresolvedActions, submitting, onClose }: Close
         type="button"
         disabled={!reviewed || submitting}
         onClick={() => void onClose()}
-        className="mt-3 rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-3 rounded-md bg-gradient-to-r from-rose-600 to-red-700 px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Close case
       </button>

@@ -2,12 +2,12 @@ import type { ReactElement } from 'react';
 import type { SimStatus } from '@recoverai/shared';
 
 const STATUS_STYLES: Record<SimStatus, string> = {
-  ACTIVE: 'border-slate-700 bg-slate-800 text-slate-400',
+  ACTIVE: 'border-white/15 bg-white/5 text-slate-400',
   BLOCK_REQUESTED: 'border-amber-900 bg-amber-950 text-amber-300',
-  BLOCKED: 'border-emerald-900 bg-emerald-950 text-emerald-300',
-  REPLACEMENT_PENDING: 'border-sky-900 bg-sky-950 text-sky-300',
-  REPLACED: 'border-emerald-900 bg-emerald-950 text-emerald-300',
-  UNKNOWN: 'border-slate-700 bg-slate-800 text-slate-400',
+  BLOCKED: 'glass-panel-success text-emerald-300',
+  REPLACEMENT_PENDING: 'border-cyan-400/30 bg-cyan-400/10 text-cyan-300',
+  REPLACED: 'glass-panel-success text-emerald-300',
+  UNKNOWN: 'border-white/15 bg-white/5 text-slate-400',
 };
 
 const STATUS_LABELS: Record<SimStatus, string> = {

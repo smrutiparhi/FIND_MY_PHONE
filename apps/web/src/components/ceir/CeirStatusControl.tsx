@@ -2,7 +2,7 @@ import { useState, type ReactElement } from 'react';
 import type { CeirStatus, UserSettableCeirStatus } from '@recoverai/shared';
 
 const BUTTON_CLASSES =
-  'rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50';
+  'rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50';
 
 const CRITICAL_LABELS: Record<'SUBMITTED' | 'BLOCKED' | 'UNBLOCKED', string> = {
   SUBMITTED: 'you have actually submitted the CEIR request and recorded its Request ID below',
@@ -30,14 +30,14 @@ export function CeirStatusControl({
 
   if (confirmingTarget) {
     return (
-      <div className="rounded-md border border-emerald-900 bg-emerald-950/40 p-3">
+      <div className="glass-panel-success p-3">
         <p className="text-xs text-emerald-200">Only confirm once {CRITICAL_LABELS[confirmingTarget]}.</p>
         <div className="mt-2 flex gap-2">
           <button
             type="button"
             disabled={submitting}
             onClick={() => void onChangeStatus(confirmingTarget).then(() => setConfirmingTarget(null))}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Yes, confirmed
           </button>

@@ -78,13 +78,13 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 glass-panel p-5">
       <h2 className="text-sm font-semibold text-slate-300">Record a location</h2>
 
       <fieldset className="space-y-2">
         <legend className="text-xs font-medium text-slate-400">Where did this information come from?</legend>
         {SOURCE_OPTIONS.map((opt) => (
-          <label key={opt.value} className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-800 p-2.5 hover:bg-slate-800/50">
+          <label key={opt.value} className="flex cursor-pointer items-start gap-2 rounded-md border border-white/10 p-2.5 hover:bg-white/10">
             <input
               type="radio"
               name="source"
@@ -110,7 +110,7 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
             value={latitude}
             onChange={(e) => setLatitude(e.target.value)}
             required
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           />
         </label>
         <label className="text-xs text-slate-400">
@@ -121,7 +121,7 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
             value={longitude}
             onChange={(e) => setLongitude(e.target.value)}
             required
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           />
         </label>
       </div>
@@ -130,7 +130,7 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
         type="button"
         onClick={onTogglePickMode}
         className={`w-full rounded-md border px-3 py-1.5 text-xs font-medium ${
-          pickModeActive ? 'border-sky-700 bg-sky-950 text-sky-300' : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+          pickModeActive ? 'border-sky-700 bg-cyan-400/10 text-cyan-300' : 'border-white/15 text-slate-300 hover:bg-white/10'
         }`}
       >
         {pickModeActive ? 'Click the map to set this location...' : 'Pick on map instead'}
@@ -144,7 +144,7 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
             inputMode="decimal"
             value={accuracyMeters}
             onChange={(e) => setAccuracyMeters(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           />
         </label>
         <label className="text-xs text-slate-400">
@@ -155,7 +155,7 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
             onChange={(e) => setObservedAt(e.target.value)}
             max={toDatetimeLocalValue(new Date())}
             required
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+            className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
           />
         </label>
       </div>
@@ -167,16 +167,16 @@ export function RecordLocationForm({ onSubmit, submitting, pickedCoords, pickMod
           onChange={(e) => setNotes(e.target.value)}
           maxLength={500}
           rows={2}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-white"
+          className="mt-1 w-full rounded-md input-field px-2.5 py-1.5 text-sm text-white"
         />
       </label>
 
-      {error ? <p className="text-xs text-red-400">{error}</p> : null}
+      {error ? <p className="text-xs text-rose-400">{error}</p> : null}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-md bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? 'Saving...' : 'Save location'}
       </button>

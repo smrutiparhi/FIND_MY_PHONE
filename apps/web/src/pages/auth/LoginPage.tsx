@@ -1,9 +1,8 @@
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../../components/auth/AuthLayout';
-import { FormField } from '../../components/auth/FormField';
 import { FormMessage } from '../../components/auth/FormMessage';
-import { AuthSubmitButton } from '../../components/auth/AuthSubmitButton';
+import { FormField, Button } from '@recoverai/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -17,7 +16,7 @@ export function LoginPage(): ReactElement {
   const [error, setError] = useState<string | null>(null);
 
   if (!loading && session) {
-    const redirectTo = (location.state as { from?: string } | null)?.from ?? '/';
+    const redirectTo = (location.state as { from?: string } | null)?.from ?? '/dashboard';
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -34,7 +33,7 @@ export function LoginPage(): ReactElement {
       setError('Incorrect email or password.');
       return;
     }
-    navigate('/', { replace: true });
+    navigate('/dashboard', { replace: true });
   }
 
   return (
@@ -45,12 +44,12 @@ export function LoginPage(): ReactElement {
         <>
           <p>
             No account?{' '}
-            <Link to="/register" className="font-medium text-sky-400 hover:text-sky-300">
+            <Link to="/register" className="font-medium text-cyan-300 hover:text-cyan-300">
               Create one
             </Link>
           </p>
           <p className="mt-1">
-            <Link to="/forgot-password" className="font-medium text-sky-400 hover:text-sky-300">
+            <Link to="/forgot-password" className="font-medium text-cyan-300 hover:text-cyan-300">
               Forgot your password?
             </Link>
           </p>
@@ -77,9 +76,9 @@ export function LoginPage(): ReactElement {
           autoComplete="current-password"
           required
         />
-        <AuthSubmitButton disabled={submitting}>
+        <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
           {submitting ? 'Signing in...' : 'Sign in'}
-        </AuthSubmitButton>
+        </Button>
       </form>
     </AuthLayout>
   );

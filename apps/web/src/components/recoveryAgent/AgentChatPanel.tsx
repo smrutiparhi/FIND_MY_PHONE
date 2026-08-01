@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactElement } from '
 import type { AiAgentChatMessage, RecoveryCase, RecoveryCaseId, RecoveryPlan, SendAgentMessageResult } from '@recoverai/shared';
 import { AI_AGENT_CHAT_MESSAGE_LIMITS } from '@recoverai/shared';
 import { ApiClientError, apiPost } from '../../lib/apiClient';
-import { VerificationTag } from '../recoveryCase/VerificationTag';
+import { AgentPanel, Button, VerificationTag } from '@recoverai/ui';
 
 function storageKey(caseId: RecoveryCaseId): string {
   return `recoverai:agent-chat:${caseId}`;
@@ -83,70 +83,64 @@ export function AgentChatPanel({ caseId, onCaseUpdated }: AgentChatPanelProps): 
   }
 
   return (
-    <div className="flex h-[32rem] flex-col rounded-lg border border-slate-800 bg-slate-900">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-300">Recovery Agent</h2>
-        {lastWasSimulated ? (
-          <span className="rounded-full border border-amber-900 bg-amber-950 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+    <AgentPanel
+      title="Recovery Agent"
+      scrollRef={scrollRef}
+      error={error}
+      badge={
+        lastWasSimulated ? (
+          <span className="inline-flex items-center rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
             DEMO AI PROVIDER
           </span>
-        ) : null}
-      </div>
-
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        {messages.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Ask about what happened, what to do next, or tell me anything new (e.g. &quot;I found my phone&quot; or
-            &quot;I have UPI apps on it&quot;).
-          </p>
-        ) : null}
-        {messages.map((message, index) => (
-          <div key={index} className={`flex flex-col gap-1 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <VerificationTag kind={message.role === 'user' ? 'user' : 'ai'} />
-            <div
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-                message.role === 'user' ? 'bg-sky-900 text-sky-50' : 'bg-slate-800 text-slate-100'
-              }`}
-            >
-              {message.content}
-            </div>
-          </div>
-        ))}
-        {lastToolCalls.length > 0 ? (
-          <div className="space-y-1">
-            {lastToolCalls.map((call, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <VerificationTag kind="system" />
-                <span className="text-xs text-emerald-300">{call.summary}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-        {sending ? <p className="text-xs text-slate-500">Thinking...</p> : null}
-      </div>
-
-      {error ? (
-        <p className="border-t border-red-900 bg-red-950 px-4 py-2 text-xs text-red-300">{error}</p>
+        ) : null
+      }
+      footer={
+        <form onSubmit={(e) => void handleSubmit(e)} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            maxLength={AI_AGENT_CHAT_MESSAGE_LIMITS.maxMessageLength}
+            placeholder="Type a message..."
+            disabled={sending}
+            aria-label="Message the Recovery Agent"
+            className="input-field flex-1 disabled:opacity-60"
+          />
+          <Button type="submit" variant="primary" disabled={sending || draft.trim().length === 0}>
+            Send
+          </Button>
+        </form>
+      }
+    >
+      {messages.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          Ask about what happened, what to do next, or tell me anything new (e.g. &quot;I found my phone&quot; or &quot;I
+          have UPI apps on it&quot;).
+        </p>
       ) : null}
-
-      <form onSubmit={(e) => void handleSubmit(e)} className="flex items-center gap-2 border-t border-slate-800 p-3">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          maxLength={AI_AGENT_CHAT_MESSAGE_LIMITS.maxMessageLength}
-          placeholder="Type a message..."
-          disabled={sending}
-          className="flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sky-700 focus:outline-none disabled:opacity-60"
-        />
-        <button
-          type="submit"
-          disabled={sending || draft.trim().length === 0}
-          className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Send
-        </button>
-      </form>
-    </div>
+      {messages.map((message, index) => (
+        <div key={index} className={`flex flex-col gap-1 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+          <VerificationTag kind={message.role === 'user' ? 'user' : 'ai'} />
+          <div
+            className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
+              message.role === 'user' ? 'bg-cyan-500/20 text-cyan-50' : 'bg-white/5 text-slate-100'
+            }`}
+          >
+            {message.content}
+          </div>
+        </div>
+      ))}
+      {lastToolCalls.length > 0 ? (
+        <div className="space-y-1">
+          {lastToolCalls.map((call, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <VerificationTag kind="system" />
+              <span className="text-xs text-emerald-300">{call.summary}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {sending ? <p className="text-xs text-slate-500">Thinking...</p> : null}
+    </AgentPanel>
   );
 }

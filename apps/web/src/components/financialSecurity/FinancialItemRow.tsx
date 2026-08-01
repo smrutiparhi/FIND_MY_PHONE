@@ -1,9 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import type { FinancialCategoryGuide, FinancialProtectionItem, UserSettableFinancialProtectionStatus } from '@recoverai/shared';
+import { Button, ConfirmDialog } from '@recoverai/ui';
 import { FinancialItemStatusBadge } from './FinancialItemStatusBadge';
-
-const BUTTON_CLASSES =
-  'rounded-md border border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50';
 
 interface FinancialItemRowProps {
   item: FinancialProtectionItem;
@@ -15,58 +13,72 @@ interface FinancialItemRowProps {
 
 /** Confirming "protected" requires an explicit second click - this is the item's own critical external action, same discipline as Parts 9-11. */
 export function FinancialItemRow({ item, guide, submitting, onChangeStatus, onDelete }: FinancialItemRowProps): ReactElement {
-  const [confirming, setConfirming] = useState(false);
+  const [confirmingSecured, setConfirmingSecured] = useState(false);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const itemLabel = item.label ? `${guide.label}: ${item.label}` : guide.label;
 
   return (
-    <li className="rounded-md border border-slate-800 p-3">
+    <li className="glass-panel-inset rounded-2xl p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-white">{item.label ? `${guide.label}: ${item.label}` : guide.label}</p>
+          <p className="text-sm font-medium text-white">{itemLabel}</p>
           <p className="mt-1 text-xs text-slate-400">{guide.instructions}</p>
         </div>
         <FinancialItemStatusBadge status={item.status} />
       </div>
 
       {item.status !== 'CONFIRMED_BY_USER' && item.status !== 'CONFIRMED_BY_INTEGRATION' ? (
-        confirming ? (
-          <div className="mt-2 rounded-md border border-emerald-900 bg-emerald-950/40 p-2">
+        confirmingSecured ? (
+          <div className="mt-2 glass-panel-success p-2">
             <p className="text-[11px] text-emerald-200">Only confirm once you&apos;ve actually secured this.</p>
             <div className="mt-1.5 flex gap-2">
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
+                className="!px-2.5 !py-1 !text-[11px]"
                 disabled={submitting}
-                onClick={() => void onChangeStatus('CONFIRMED_BY_USER').then(() => setConfirming(false))}
-                className="rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => void onChangeStatus('CONFIRMED_BY_USER').then(() => setConfirmingSecured(false))}
               >
                 Yes, secured
-              </button>
-              <button type="button" onClick={() => setConfirming(false)} className={BUTTON_CLASSES}>
+              </Button>
+              <Button variant="ghost" size="sm" className="!px-2.5 !py-1 !text-[11px]" onClick={() => setConfirmingSecured(false)}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <div className="mt-2 flex flex-wrap gap-2">
             {item.status === 'NOT_STARTED' ? (
-              <button type="button" disabled={submitting} onClick={() => void onChangeStatus('IN_PROGRESS')} className={BUTTON_CLASSES}>
+              <Button variant="secondary" size="sm" className="!px-2.5 !py-1 !text-[11px]" disabled={submitting} onClick={() => void onChangeStatus('IN_PROGRESS')}>
                 Mark in progress
-              </button>
+              </Button>
             ) : null}
-            <button type="button" disabled={submitting} onClick={() => setConfirming(true)} className={BUTTON_CLASSES}>
+            <Button variant="secondary" size="sm" className="!px-2.5 !py-1 !text-[11px]" disabled={submitting} onClick={() => setConfirmingSecured(true)}>
               Mark secured
-            </button>
-            <button type="button" disabled={submitting} onClick={() => void onDelete()} className={BUTTON_CLASSES}>
+            </Button>
+            <Button variant="secondary" size="sm" className="!px-2.5 !py-1 !text-[11px]" disabled={submitting} onClick={() => setConfirmingRemove(true)}>
               Remove
-            </button>
+            </Button>
           </div>
         )
       ) : (
         <div className="mt-2">
-          <button type="button" disabled={submitting} onClick={() => void onDelete()} className={BUTTON_CLASSES}>
+          <Button variant="secondary" size="sm" className="!px-2.5 !py-1 !text-[11px]" disabled={submitting} onClick={() => setConfirmingRemove(true)}>
             Remove
-          </button>
+          </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmingRemove}
+        title="Remove this item?"
+        description={`"${itemLabel}" will no longer be tracked here. If it's still on the device, remember to secure it another way.`}
+        confirmLabel="Remove"
+        tone="danger"
+        submitting={submitting}
+        onConfirm={() => void onDelete().then(() => setConfirmingRemove(false))}
+        onCancel={() => setConfirmingRemove(false)}
+      />
     </li>
   );
 }

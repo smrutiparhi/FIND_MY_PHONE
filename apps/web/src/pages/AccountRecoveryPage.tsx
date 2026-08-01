@@ -6,6 +6,7 @@ import { AccessChecklistForm } from '../components/accountRecovery/AccessCheckli
 import { RecoveryPathSteps } from '../components/accountRecovery/RecoveryPathSteps';
 import { AccountRecoveryStatusBadge } from '../components/accountRecovery/AccountRecoveryStatusBadge';
 import { AccountRecoveryStatusControl } from '../components/accountRecovery/AccountRecoveryStatusControl';
+import { ErrorState } from '@recoverai/ui';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -65,22 +66,12 @@ export function AccountRecoveryPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading account recovery...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading account recovery...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load account recovery.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load account recovery." message={state.message} onRetry={load} />
     );
   }
 
@@ -103,14 +94,14 @@ export function AccountRecoveryPage(): ReactElement {
       </div>
 
       {attempt.status === 'RECOVERED' ? (
-        <div className="rounded-md border border-emerald-900 bg-emerald-950/60 p-4 text-sm text-emerald-300">
+        <div className="glass-panel-success p-4 text-sm text-emerald-300">
           Account access has been marked restored. The recovery plan has been updated.
         </div>
       ) : (
         <AccountRecoveryStatusControl status={attempt.status} submitting={submitting} onChangeStatus={handleChangeStatus} />
       )}
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <AccessChecklistForm initialSignals={attempt.availableSignals} submitting={submitting} onSubmit={handleSaveChecklist} />

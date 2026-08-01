@@ -3,8 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import type { Evidence, EvidenceAccessResult, EvidenceCategory } from '@recoverai/shared';
 import { ApiClientError, apiDelete, apiGet, apiUpload } from '../lib/apiClient';
 import { UploadEvidenceForm } from '../components/evidence/UploadEvidenceForm';
-import { EvidenceItemRow } from '../components/evidence/EvidenceItemRow';
 import { EvidenceTextViewer } from '../components/evidence/EvidenceTextViewer';
+import { EvidenceCard, ErrorState } from '@recoverai/ui';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -82,22 +82,12 @@ export function EvidenceVaultPage(): ReactElement {
   }
 
   if (state.status === 'loading') {
-    return <div className="text-sm text-slate-400">Loading Evidence Vault...</div>;
+    return <div role="status" className="text-sm text-slate-400">Loading Evidence Vault...</div>;
   }
 
   if (state.status === 'error') {
     return (
-      <div className="rounded-lg border border-red-900 bg-red-950 p-5 text-sm text-red-300">
-        <p className="font-medium">Couldn&apos;t load the Evidence Vault.</p>
-        <p className="mt-1 text-red-400">{state.message}</p>
-        <button
-          type="button"
-          onClick={load}
-          className="mt-3 rounded-md border border-red-800 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-900"
-        >
-          Try again
-        </button>
-      </div>
+      <ErrorState title="Couldn't load the Evidence Vault." message={state.message} onRetry={load} />
     );
   }
 
@@ -114,17 +104,17 @@ export function EvidenceVaultPage(): ReactElement {
         </p>
       </div>
 
-      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+        <div className="glass-panel p-5">
           <h2 className="text-sm font-semibold text-slate-300">Stored evidence ({state.items.length})</h2>
           {state.items.length === 0 ? (
             <p className="mt-2 text-sm text-slate-500">Nothing uploaded yet.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {state.items.map((item) => (
-                <EvidenceItemRow key={item.id} evidence={item} submitting={submitting} onView={handleView} onDelete={handleDelete} />
+                <EvidenceCard key={item.id} evidence={item} submitting={submitting} onView={handleView} onDelete={handleDelete} />
               ))}
             </ul>
           )}

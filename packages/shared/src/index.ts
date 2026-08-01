@@ -14,4 +14,5 @@ export * from './types/financialSecurity';
 export * from './types/policeReport';
 export * from './types/ceir';
 export * from './types/evidence';
+export * from './types/timeline';
 export * from './utils/brand';

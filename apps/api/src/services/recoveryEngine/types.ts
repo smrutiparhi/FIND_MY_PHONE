@@ -21,10 +21,20 @@ export type TimeSinceIncidentBucket = 'JUST_NOW' | 'TODAY' | 'THIS_WEEK' | 'OLDE
 
 export type PoliceReportEngineStatus = 'NOT_STARTED' | 'DRAFTED' | 'FILED';
 
-/** An action already persisted for this case - preserved across recalculation, never silently reset. */
+/**
+ * An action already persisted for this case - preserved across
+ * recalculation, never silently reset. title/reason/instructions are
+ * optional and only used as a display fallback for the "orphaned existing
+ * action" path below (a completed/skipped row whose state no longer
+ * generates a fresh candidate) - every other path recomputes real,
+ * current text instead of reusing stale copy.
+ */
 export interface ExistingActionState {
   type: RecoveryActionType;
   status: RecoveryActionStatus;
+  title?: string;
+  reason?: string;
+  instructions?: string;
 }
 
 /**

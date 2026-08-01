@@ -11,6 +11,7 @@ import type {
   SendAgentMessageResult,
   UpdateRecoveryActionStatusInput,
   UpdateRecoveryActionStatusResult,
+  UserId,
 } from '@recoverai/shared';
 import { getRepos } from '../db/repos';
 import { getPool } from '../db/pool';
@@ -71,6 +72,52 @@ export async function getRecoveryPlan(
   res.status(200).json({ success: true, data: toRecoveryPlan(engineResult, actionIdByType) });
 }
 
+/**
+ * LOCATE_DEVICE and SECURE_DEVICE have no dedicated flow anywhere else in
+ * the app (unlike SIM_PROTECTION/ACCOUNT_RECOVERY/... which each log their
+ * own timeline events from their own service) - this generic status-change
+ * endpoint is the only place either one is ever actually completed, so it's
+ * the only place Part 16's "device-finding workflow opened" / "device
+ * secured" automatic events can be logged from. Gated on the specific
+ * transition (not just "this type, any status") so a redundant PATCH to the
+ * same status never double-logs.
+ */
+async function maybeLogAutomaticActionEvent(
+  caseId: RecoveryCaseId,
+  actionId: RecoveryActionId,
+  previousStatus: string,
+  action: { type: string },
+  newStatus: string,
+  userId: UserId,
+): Promise<void> {
+  if (previousStatus === newStatus) return;
+
+  if (action.type === 'LOCATE_DEVICE' && newStatus === 'IN_PROGRESS') {
+    await getRepos().timelineEvents.create({
+      caseId,
+      type: 'DEVICE_FINDING_OPENED',
+      title: 'Device-finding workflow opened',
+      source: 'USER',
+      verificationStatus: 'USER_REPORTED',
+      recoveryActionId: actionId,
+      createdByUserId: userId,
+    });
+    return;
+  }
+
+  if (action.type === 'SECURE_DEVICE' && newStatus === 'COMPLETED') {
+    await getRepos().timelineEvents.create({
+      caseId,
+      type: 'DEVICE_SECURED',
+      title: 'Device secured',
+      source: 'USER',
+      verificationStatus: 'USER_REPORTED',
+      recoveryActionId: actionId,
+      createdByUserId: userId,
+    });
+  }
+}
+
 export async function updateActionStatus(
   req: Request<{ caseId: string; actionId: string }, unknown, UpdateRecoveryActionStatusInput>,
   res: Response<ApiSuccessResponse<UpdateRecoveryActionStatusResult>>,
@@ -88,6 +135,7 @@ export async function updateActionStatus(
   }
 
   await getRepos().recoveryActions.updateStatus(actionId, req.user.id, req.body.status);
+  await maybeLogAutomaticActionEvent(caseId, actionId, existingAction.status, existingAction, req.body.status, req.user.id);
   const { recoveryCase, engineResult, actionIdByType } = await recalculateRecoveryCase(pool, req.user.id, caseId);
   res.status(200).json({ success: true, data: { recoveryCase, recoveryPlan: toRecoveryPlan(engineResult, actionIdByType) } });
 }

@@ -274,6 +274,31 @@ describe('evaluateRecoveryDecision - recalculation never resets user progress', 
     expect(sim?.status).toBe('COMPLETED');
   });
 
+  it('preserves the real title/reason/instructions on a carried-over action instead of falling back to the raw type string', () => {
+    // Regression test: the "orphaned existing action" path used to always emit
+    // `title: existing.type` (e.g. the literal string "SECURE_DEVICE") and a generic reason,
+    // discarding the action's real persisted text - visible to a real user as a raw enum name
+    // on the Part 17 dashboard.
+    const result = evaluateRecoveryDecision(
+      baseInput({
+        incidentType: 'STOLEN',
+        deviceSecured: true,
+        existingActions: existing({
+          type: 'SECURE_DEVICE',
+          status: 'COMPLETED',
+          title: 'Secure the device remotely (Lost Mode / lock / erase)',
+          reason: 'The device is in someone else\'s possession.',
+          instructions: 'Use Find Hub to lock the device remotely.',
+        }),
+      }),
+    );
+    const secure = result.orderedActions.find((a) => a.type === 'SECURE_DEVICE');
+    expect(secure?.title).toBe('Secure the device remotely (Lost Mode / lock / erase)');
+    expect(secure?.title).not.toBe('SECURE_DEVICE');
+    expect(secure?.reason).toBe('The device is in someone else\'s possession.');
+    expect(secure?.instructions).toBe('Use Find Hub to lock the device remotely.');
+  });
+
   it('when every action is resolved (completed/skipped), there is no current recommended action', () => {
     const result = evaluateRecoveryDecision(
       baseInput({

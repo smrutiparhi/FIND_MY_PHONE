@@ -13,6 +13,33 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 17 — Recovery dashboard.** The main case page rebuilt into a real dashboard: a top summary
+(device, incident status, risk, case status, last location, last update), a Recovery Progress
+checklist with the Recovery Decision Engine's current recommended action as the largest
+call-to-action — a literal checklist, not a computed percentage, matching the master spec's own
+worked example — a card for each main section (Location/Security/SIM/Accounts/Financial
+protection/Police/CEIR/Evidence/Timeline), the full detailed plan, and the AI Recovery Agent as an
+assistant panel. No new backend routes — every field already existed from an earlier part. Verifying
+this page against the actual running app (screenshots via a headless browser, not just type
+checking) caught a real pre-existing bug in the Recovery Decision Engine: a completed action whose
+triggering state had changed since it was created was rendering its literal internal type name
+(e.g. `SECURE_DEVICE`) as its title, invisible until this page's own progress checklist put
+completed items front and center. Fixed with a regression test. See
+[`docs/RECOVERY_DASHBOARD.md`](docs/RECOVERY_DASHBOARD.md) for the full design.
+
+**Part 16 — Timeline + case tracking.** A chronological (and reverse-chronological)
+`/recovery-cases/:caseId/timeline` view of everything that's happened on a case — most of the
+infrastructure (the event log, its full type enum, immutable-system-event protection) was already
+built in Part 2 and already being written to by every part since; this part adds the viewing layer,
+user notes (editable/deletable, unlike every system event, which is rejected with a clear 403 rather
+than a misleading 404), and a sanitized case-summary export. Auditing the spec's own event list
+against what actually fired found two real gaps — device-finding-opened and device-secured had no
+code path creating them anywhere — both now fire from the one place either action is ever actually
+completed. The export is sanitized by construction rather than by redaction: every timeline event's
+own text was already designed, by earlier parts, to never embed a raw IMEI, exact coordinates, or
+file content, so there's nothing sensitive available to leak by forgetting to strip it. See
+[`docs/TIMELINE.md`](docs/TIMELINE.md) for the full design.
+
 **Part 15 — Evidence Vault.** Secure, per-case file storage (`/recovery-cases/:caseId/evidence`) for
 purchase invoices, device photos, IMEI/serial documentation, location screenshots, and other
 recovery evidence — plus the police complaint and CEIR records Parts 13/14 already generate. Files

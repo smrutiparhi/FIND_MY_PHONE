@@ -395,6 +395,42 @@ complaint, a CEIR record summary) back out instead of asking object storage for 
 never written. `audit_events` (Part 2, never called until now) gets one row per upload, access, and
 delete. See [`EVIDENCE_VAULT.md`](EVIDENCE_VAULT.md) for the full design.
 
+## Timeline + case tracking (Part 16)
+
+`timeline_events`, its full event-type enum, and the repository were built in Part 2, and every part
+from 6 through 15 was already writing to it at its own significant moments — Part 16 is mostly the
+presentation layer (`services/timeline/timelineService.ts`) that data was waiting for: chronological
+and reverse-chronological listing, editable `USER_NOTE` rows (`ForbiddenError`, not a misleading 404,
+when a client tries to touch a system event), and a sanitized export. Auditing the master spec's
+event list against what actually fired turned up two real gaps — `DEVICE_FINDING_OPENED` and
+`DEVICE_SECURED` had no code path creating them anywhere, since `LOCATE_DEVICE`/`SECURE_DEVICE` have
+no dedicated flow the way SIM Protection or Account Recovery do; both are now logged from the one
+place either action is ever actually transitioned, the generic action-status endpoint. `DEVICE_
+RECOVERED`/`DEVICE_ERASED`/`CASE_CLOSED` are deliberately left unwired — nothing can transition a
+case into those states yet, since that's explicitly Part 18's job. `buildSanitizedCaseSummary.ts` is
+sanitized by construction, not by redaction: every `TimelineEvent.title`/`description` an earlier
+part ever writes was already designed to never embed a raw IMEI, exact coordinates, or file content
+(those live only in linked rows, reached only through separate explicit calls this function never
+makes), so there's no secret-bearing field available to leak by forgetting to strip it. See
+[`TIMELINE.md`](TIMELINE.md) for the full design.
+
+## Recovery dashboard (Part 17)
+
+The main case page, rebuilt from what was previously just a thin nav-link header - a top summary,
+a Recovery Progress checklist (a literal checkmark-or-pending list plus the engine's current
+recommendation as the largest CTA, matching the master spec's own worked example rather than a
+computed percentage), one card per main section, the full detailed plan, and the AI Recovery Agent
+as an assistant panel. Zero new backend routes - every field already had a GET endpoint from an
+earlier part; `dashboardSections.ts` maps eight of the nine spec-named sections onto their
+`RecoveryActionType` one-to-one so each card's status reads directly off that action, never a
+second parallel computation. Screenshot-verifying this page against the running app (not just
+`tsc`/tests) caught a real, pre-existing Recovery Decision Engine bug: a completed action whose
+triggering state had since changed fell back to a hard-coded `title: existing.type` (a literal
+string like `"SECURE_DEVICE"`) in `evaluateRecoveryDecision.ts`'s "orphaned existing action" path,
+invisible until this part's own progress checklist put it front and center. Fixed by threading the
+action's real title/reason/instructions through `RecoveryEngineInput.existingActions`. See
+[`RECOVERY_DASHBOARD.md`](RECOVERY_DASHBOARD.md) for the full design.
+
 ## External-service abstraction
 
 `services/external/ExternalServiceResult.ts` defines a discriminated union —

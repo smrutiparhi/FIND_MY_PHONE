@@ -349,9 +349,9 @@ export function evaluateRecoveryDecision(input: RecoveryEngineInput): RecoveryEn
       merged.push({
         type: existing.type,
         priority: 0,
-        title: existing.type,
-        reason: 'Carried over from an earlier assessment.',
-        instructions: '',
+        title: existing.title ?? existing.type,
+        reason: existing.reason ?? 'Carried over from an earlier assessment.',
+        instructions: existing.instructions ?? '',
         status: existing.status,
         dependencies: [],
         officialExternalAction: null,

@@ -39,6 +39,13 @@ import {
   postEvidence,
 } from '../controllers/evidence.controller';
 import {
+  deleteTimelineNoteHandler,
+  getTimeline,
+  getTimelineExport,
+  patchTimelineNote,
+  postTimelineNote,
+} from '../controllers/timeline.controller';
+import {
   caseActionParamsSchema,
   caseIdParamsSchema,
   createRecoveryCaseWizardSchema,
@@ -66,6 +73,12 @@ import {
   evidenceItemParamsSchema,
   uploadEvidenceBodySchema,
 } from '../validation/schemas/evidence.schemas';
+import {
+  timelineCaseParamsSchema,
+  timelineEventParamsSchema,
+  timelineNoteSchema,
+  timelineOrderQuerySchema,
+} from '../validation/schemas/timeline.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -244,4 +257,37 @@ recoveryCaseRouter.delete(
   requireAuth,
   validate(evidenceItemParamsSchema, 'params'),
   asyncHandler(deleteEvidenceHandler),
+);
+recoveryCaseRouter.get(
+  '/:caseId/timeline',
+  requireAuth,
+  validate(timelineCaseParamsSchema, 'params'),
+  validate(timelineOrderQuerySchema, 'query'),
+  asyncHandler(getTimeline),
+);
+recoveryCaseRouter.post(
+  '/:caseId/timeline/notes',
+  requireAuth,
+  validate(timelineCaseParamsSchema, 'params'),
+  validate(timelineNoteSchema),
+  asyncHandler(postTimelineNote),
+);
+recoveryCaseRouter.patch(
+  '/:caseId/timeline/notes/:eventId',
+  requireAuth,
+  validate(timelineEventParamsSchema, 'params'),
+  validate(timelineNoteSchema),
+  asyncHandler(patchTimelineNote),
+);
+recoveryCaseRouter.delete(
+  '/:caseId/timeline/notes/:eventId',
+  requireAuth,
+  validate(timelineEventParamsSchema, 'params'),
+  asyncHandler(deleteTimelineNoteHandler),
+);
+recoveryCaseRouter.get(
+  '/:caseId/timeline/export',
+  requireAuth,
+  validate(timelineCaseParamsSchema, 'params'),
+  asyncHandler(getTimelineExport),
 );

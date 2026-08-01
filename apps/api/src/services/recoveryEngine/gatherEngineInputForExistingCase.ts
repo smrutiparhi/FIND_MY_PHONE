@@ -65,7 +65,13 @@ export async function gatherEngineInputForExistingCase(
     financialAccountsSecured: isCompleted('FINANCIAL_PROTECTION'),
     policeReportStatus,
     ceirStatus: ceirRecord?.status ?? 'NOT_READY',
-    existingActions: actions.map((action) => ({ type: action.type, status: action.status })),
+    existingActions: actions.map((action) => ({
+      type: action.type,
+      status: action.status,
+      title: action.title,
+      reason: action.reason,
+      instructions: action.instructions,
+    })),
   };
 
   return { input, existingDbActions: actions, sensitiveApps };

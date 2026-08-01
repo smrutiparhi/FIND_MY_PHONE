@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { Device, RecoveryCase, RecoveryCaseId, RecoveryPlan } from '@recoverai/shared';
-import { ApiClientError, apiGet } from '../lib/apiClient';
-import { RiskBadge } from '../components/dashboard/RiskBadge';
-import { CaseStatusBadge } from '../components/dashboard/CaseStatusBadge';
+import type { Device, LocationObservation, RecoveryCase, RecoveryCaseId, RecoveryPlan, TimelineEvent } from '@recoverai/shared';
+import { ApiClientError, apiGet, apiPatch } from '../lib/apiClient';
+import { CaseSummaryHeader } from '../components/recoveryCase/CaseSummaryHeader';
+import { RecoveryProgressCard } from '../components/recoveryCase/RecoveryProgressCard';
+import { DashboardSectionCard } from '../components/recoveryCase/DashboardSectionCard';
 import { RecoveryPlanPanel } from '../components/recoveryCase/RecoveryPlanPanel';
 import { AgentChatPanel } from '../components/recoveryAgent/AgentChatPanel';
-
-const INCIDENT_LABELS: Record<RecoveryCase['incidentType'], string> = {
-  LOST: 'Lost',
-  STOLEN: 'Stolen',
-  UNSURE: 'Unsure',
-};
+import { DASHBOARD_SECTIONS } from '../components/recoveryCase/dashboardSections';
 
 function describeError(err: unknown): string {
   if (err instanceof ApiClientError) return err.message;
@@ -19,14 +15,27 @@ function describeError(err: unknown): string {
   return 'Something went wrong.';
 }
 
-type LoadState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'success'; recoveryCase: RecoveryCase; device: Device; recoveryPlan: RecoveryPlan };
+interface DashboardData {
+  recoveryCase: RecoveryCase;
+  device: Device;
+  recoveryPlan: RecoveryPlan;
+  latestLocation: LocationObservation | null;
+  latestTimelineEvents: TimelineEvent[];
+}
 
+type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'success'; data: DashboardData };
+
+/**
+ * "Build the main case page" (master spec, Part 17) - top summary, a
+ * Recovery Progress checklist with the engine's current recommended action
+ * as the largest CTA, one card per main section, the full detailed plan,
+ * and the AI Recovery Agent as an assistant panel.
+ */
 export function RecoveryCaseDetailPage(): ReactElement {
   const { caseId } = useParams<{ caseId: string }>();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const [submitting, setSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (!caseId) return;
@@ -35,14 +44,19 @@ export function RecoveryCaseDetailPage(): ReactElement {
       apiGet<RecoveryCase>(`/api/recovery-cases/${caseId}`),
       apiGet<Device[]>('/api/devices'),
       apiGet<RecoveryPlan>(`/api/recovery-cases/${caseId}/recovery-plan`),
+      apiGet<LocationObservation[]>(`/api/recovery-cases/${caseId}/locations`),
+      apiGet<TimelineEvent[]>(`/api/recovery-cases/${caseId}/timeline?order=desc`),
     ])
-      .then(([recoveryCase, devices, recoveryPlan]) => {
+      .then(([recoveryCase, devices, recoveryPlan, locations, timelineEvents]) => {
         const device = devices.find((d) => d.id === recoveryCase.deviceId);
         if (!device) {
-          setState({ status: 'error', message: 'Could not load this case\'s device.' });
+          setState({ status: 'error', message: "Could not load this case's device." });
           return;
         }
-        setState({ status: 'success', recoveryCase, device, recoveryPlan });
+        setState({
+          status: 'success',
+          data: { recoveryCase, device, recoveryPlan, latestLocation: locations[0] ?? null, latestTimelineEvents: timelineEvents.slice(0, 3) },
+        });
       })
       .catch((err: unknown) => setState({ status: 'error', message: describeError(err) }));
   }, [caseId]);
@@ -52,8 +66,22 @@ export function RecoveryCaseDetailPage(): ReactElement {
   }, [load]);
 
   const handleCaseUpdated = (recoveryCase: RecoveryCase, recoveryPlan: RecoveryPlan): void => {
-    setState((prev) => (prev.status === 'success' ? { ...prev, recoveryCase, recoveryPlan } : prev));
+    setState((prev) => (prev.status === 'success' ? { ...prev, data: { ...prev.data, recoveryCase, recoveryPlan } } : prev));
   };
+
+  async function handleMarkActionDone(actionId: string): Promise<void> {
+    if (!caseId) return;
+    setSubmitting(true);
+    setActionError(null);
+    try {
+      await apiPatch(`/api/recovery-cases/${caseId}/actions/${actionId}`, { status: 'COMPLETED' });
+      load();
+    } catch (err) {
+      setActionError(describeError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   if (state.status === 'loading') {
     return <div className="text-sm text-slate-400">Loading case...</div>;
@@ -75,9 +103,10 @@ export function RecoveryCaseDetailPage(): ReactElement {
     );
   }
 
-  const { recoveryCase, device, recoveryPlan } = state;
+  const { recoveryCase, device, recoveryPlan, latestLocation, latestTimelineEvents } = state.data;
   const caseIdTyped = recoveryCase.id as RecoveryCaseId;
   const isEmergency = recoveryCase.riskLevel === 'CRITICAL' || recoveryCase.riskLevel === 'HIGH';
+  const actionByType = new Map(recoveryPlan.orderedActions.map((a) => [a.type, a]));
 
   return (
     <div className="space-y-6">
@@ -91,68 +120,47 @@ export function RecoveryCaseDetailPage(): ReactElement {
         </Link>
       ) : null}
 
+      <CaseSummaryHeader recoveryCase={recoveryCase} device={device} latestLocation={latestLocation} />
+
+      {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
+
+      <RecoveryProgressCard caseId={caseIdTyped} plan={recoveryPlan} submitting={submitting} onMarkActionDone={handleMarkActionDone} />
+
       <div>
-        <Link to="/" className="text-xs text-slate-500 hover:text-slate-300">
-          &larr; Back to dashboard
-        </Link>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
-              {INCIDENT_LABELS[recoveryCase.incidentType]}
-            </p>
-            <h1 className="text-2xl font-semibold text-white">{device.nickname}</h1>
-            <p className="text-sm text-slate-400">
-              {device.manufacturer} {device.model}
-            </p>
+        <h2 className="text-sm font-semibold text-slate-300">Sections</h2>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {DASHBOARD_SECTIONS.map((section) => {
+            const action = actionByType.get(section.actionType);
+            return (
+              <DashboardSectionCard
+                key={section.key}
+                label={section.label}
+                action={action}
+                route={section.route ? section.route(caseIdTyped) : null}
+                isCurrent={recoveryPlan.currentRecommendedAction?.type === section.actionType}
+              />
+            );
+          })}
+
+          <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+            <h3 className="text-sm font-semibold text-slate-200">Timeline</h3>
+            {latestTimelineEvents.length === 0 ? (
+              <p className="mt-1.5 text-xs text-slate-500">Nothing recorded yet.</p>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {latestTimelineEvents.map((event) => (
+                  <li key={event.id} className="truncate text-xs text-slate-400">
+                    {event.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-3">
+              <Link to={`/recovery-cases/${caseIdTyped}/timeline`} className="text-xs font-medium text-sky-400 hover:underline">
+                View &rarr;
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <RiskBadge riskLevel={recoveryCase.riskLevel} />
-            <CaseStatusBadge status={recoveryCase.status} />
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/location`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            View device location
-          </Link>
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/account-recovery`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            Account recovery
-          </Link>
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/sim`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            SIM / eSIM protection
-          </Link>
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/financial-security`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            Financial security
-          </Link>
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/police-report`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            Police complaint
-          </Link>
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/ceir`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            CEIR / IMEI blocking
-          </Link>
-          <Link
-            to={`/recovery-cases/${recoveryCase.id}/evidence`}
-            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-          >
-            Evidence Vault
-          </Link>
         </div>
       </div>
 

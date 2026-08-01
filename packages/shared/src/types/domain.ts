@@ -27,6 +27,7 @@ export type AuditEventId = Brand<string, 'AuditEventId'>;
 export type AccountRecoveryAttemptId = Brand<string, 'AccountRecoveryAttemptId'>;
 export type SimProtectionRecordId = Brand<string, 'SimProtectionRecordId'>;
 export type FinancialProtectionItemId = Brand<string, 'FinancialProtectionItemId'>;
+export type DeviceRecoveryChecklistId = Brand<string, 'DeviceRecoveryChecklistId'>;
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -242,6 +243,21 @@ export type FinancialItemCategory = (typeof FINANCIAL_ITEM_CATEGORIES)[number];
 export const FINANCIAL_PROTECTION_STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'CONFIRMED_BY_USER', 'CONFIRMED_BY_INTEGRATION'] as const;
 export type FinancialProtectionStatus = (typeof FINANCIAL_PROTECTION_STATUSES)[number];
 
+/** Verbatim from the master spec's Part 18 guided-review list, minus "Close case" - that's the terminal action, not a review item. */
+export const DEVICE_RECOVERY_CHECKLIST_ITEMS = [
+  'CONFIRM_POSSESSION',
+  'CHECK_UNEXPECTED_CHANGES',
+  'RESTORE_SIM',
+  'REVIEW_ACCOUNT_SECURITY',
+  'REVIEW_EMAIL_SESSIONS',
+  'REVIEW_FINANCIAL_APPS',
+  'CHANGE_CREDENTIALS',
+  'HANDLE_CEIR_UNBLOCKING',
+  'RESTORE_DEVICE_SETTINGS',
+  'PRESERVE_EVIDENCE',
+] as const;
+export type DeviceRecoveryChecklistItem = (typeof DEVICE_RECOVERY_CHECKLIST_ITEMS)[number];
+
 export const CEIR_CHECKLIST_ITEMS = [
   'IMEI_INFORMATION',
   'MOBILE_NUMBER',
@@ -433,6 +449,24 @@ export interface CeirRecord {
   submissionDate: string | null;
   notes: string | null;
   checklistCompletedItems: CeirChecklistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * `recoveredAt`/`closedAt` are the master spec's "recovery date" and case
+ * close moment - kept here rather than relying solely on
+ * `RecoveryCase.closedAt`, which only ever records the *first* terminal
+ * status transition and would conflate the two if a case goes
+ * RECOVERED then later CLOSED.
+ */
+export interface DeviceRecoveryChecklist {
+  id: DeviceRecoveryChecklistId;
+  caseId: RecoveryCaseId;
+  completedItems: DeviceRecoveryChecklistItem[];
+  notes: string | null;
+  recoveredAt: string | null;
+  closedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

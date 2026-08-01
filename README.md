@@ -13,6 +13,23 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 18 — Device Recovered workflow.** "I found my phone" doesn't immediately close the case -
+confirming physical possession is the one real state change (moves the case to Recovered, finally
+firing the `DEVICE_RECOVERED` timeline event Part 16 left unwired), then a ten-item guided checklist
+(verbatim from the master spec, some conditional - "if appropriate", "if previously blocked") walks
+through restoring the SIM, reviewing account/financial-app security, handling CEIR unblocking, and
+preserving evidence, linking out to each feature's own existing page rather than re-implementing any
+of them. Closing the case requires an explicit "I've reviewed the unresolved actions" confirmation,
+not that every action be complete - a quickly-recovered device may never need a police report at
+all. A final case summary (incident date, recovery date, actions completed, status changes, location
+observations, police/CEIR status) is a distinct document from Part 16's redaction-by-omission
+Timeline export, since the master spec explicitly wants real location data in this one.
+Screenshot-verifying the real click-through flow (not just HTTP calls) caught two genuine bugs no
+test suite would: checking a single checklist item was silently re-fetching the expensive final
+summary every time, adding several seconds of visible lag for no reason, and the page's refresh
+strategy was unmounting the close-case confirmation checkbox on every toggle, silently un-checking
+it. Both fixed. See [`docs/DEVICE_RECOVERED.md`](docs/DEVICE_RECOVERED.md) for the full design.
+
 **Part 17 — Recovery dashboard.** The main case page rebuilt into a real dashboard: a top summary
 (device, incident status, risk, case status, last location, last update), a Recovery Progress
 checklist with the Recovery Decision Engine's current recommended action as the largest

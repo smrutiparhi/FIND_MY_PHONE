@@ -46,6 +46,12 @@ import {
   postTimelineNote,
 } from '../controllers/timeline.controller';
 import {
+  getDeviceRecovery,
+  getDeviceRecoverySummary,
+  patchDeviceRecoveryChecklist,
+  postCloseRecoveryCase,
+} from '../controllers/deviceRecovery.controller';
+import {
   caseActionParamsSchema,
   caseIdParamsSchema,
   createRecoveryCaseWizardSchema,
@@ -68,6 +74,11 @@ import {
   updatePoliceReportDraftSchema,
 } from '../validation/schemas/policeReport.schemas';
 import { updateCeirRecordSchema } from '../validation/schemas/ceir.schemas';
+import {
+  closeRecoveryCaseSchema,
+  deviceRecoveryCaseParamsSchema,
+  updateDeviceRecoveryChecklistSchema,
+} from '../validation/schemas/deviceRecovery.schemas';
 import {
   evidenceCaseParamsSchema,
   evidenceItemParamsSchema,
@@ -290,4 +301,30 @@ recoveryCaseRouter.get(
   requireAuth,
   validate(timelineCaseParamsSchema, 'params'),
   asyncHandler(getTimelineExport),
+);
+recoveryCaseRouter.get(
+  '/:caseId/device-recovery',
+  requireAuth,
+  validate(deviceRecoveryCaseParamsSchema, 'params'),
+  asyncHandler(getDeviceRecovery),
+);
+recoveryCaseRouter.patch(
+  '/:caseId/device-recovery',
+  requireAuth,
+  validate(deviceRecoveryCaseParamsSchema, 'params'),
+  validate(updateDeviceRecoveryChecklistSchema),
+  asyncHandler(patchDeviceRecoveryChecklist),
+);
+recoveryCaseRouter.post(
+  '/:caseId/device-recovery/close',
+  requireAuth,
+  validate(deviceRecoveryCaseParamsSchema, 'params'),
+  validate(closeRecoveryCaseSchema),
+  asyncHandler(postCloseRecoveryCase),
+);
+recoveryCaseRouter.get(
+  '/:caseId/device-recovery/summary',
+  requireAuth,
+  validate(deviceRecoveryCaseParamsSchema, 'params'),
+  asyncHandler(getDeviceRecoverySummary),
 );

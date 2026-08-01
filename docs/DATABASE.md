@@ -1,6 +1,6 @@
 # RecoverAI — Database (Part 2)
 
-PostgreSQL schema for RecoverAI, applied through 20 hand-written SQL migrations
+PostgreSQL schema for RecoverAI, applied through 21 hand-written SQL migrations
 (`apps/api/src/db/migrations/`) run by a minimal custom runner
 (`apps/api/src/db/migrate.ts`) — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for
 why this project uses plain SQL + a repository layer instead of an ORM.
@@ -24,6 +24,7 @@ erDiagram
     RECOVERY_CASES ||--o| ACCOUNT_RECOVERY_ATTEMPTS : "has at most one"
     RECOVERY_CASES ||--o| SIM_PROTECTION_RECORDS : "has at most one"
     RECOVERY_CASES ||--o{ FINANCIAL_PROTECTION_ITEMS : "tracks"
+    RECOVERY_CASES ||--o| DEVICE_RECOVERY_CHECKLISTS : "has at most one"
     RECOVERY_CASES ||--o{ NOTIFICATIONS : "may relate to"
     RECOVERY_CASES }o--o| RECOVERY_ACTIONS : "currentRecommendedAction"
     RECOVERY_ACTIONS ||--o{ RECOVERY_ACTIONS : "depends on (join table)"
@@ -128,6 +129,13 @@ erDiagram
         financial_item_category category
         text label "generic or by name, optional"
         financial_protection_status status
+    }
+    DEVICE_RECOVERY_CHECKLISTS {
+        uuid id PK
+        uuid case_id FK UK "one per case"
+        device_recovery_checklist_item_array completed_items
+        timestamptz recovered_at "independent of recovery_cases.closed_at"
+        timestamptz closed_at
     }
     NOTIFICATIONS {
         uuid id PK

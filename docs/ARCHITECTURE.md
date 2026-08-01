@@ -218,7 +218,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (20 hand-written SQL migrations as of Part 14 — this part added no new migration, since `ceir_records` already existed from Part 2, no ORM), a
+readiness endpoint. Part 2 built out the full schema (21 hand-written SQL migrations as of Part 18, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -430,6 +430,33 @@ string like `"SECURE_DEVICE"`) in `evaluateRecoveryDecision.ts`'s "orphaned exis
 invisible until this part's own progress checklist put it front and center. Fixed by threading the
 action's real title/reason/instructions through `RecoveryEngineInput.existingActions`. See
 [`RECOVERY_DASHBOARD.md`](RECOVERY_DASHBOARD.md) for the full design.
+
+## Device Recovered workflow (Part 18)
+
+"When the user selects 'I found my phone', do not immediately close the case" - clicking the entry
+point only navigates; the one real state change is confirming physical possession, which moves
+`recovery_cases.status` to `RECOVERED` and finally fires the `DEVICE_RECOVERED` timeline event Part
+16 deliberately left unwired. A ten-item self-attested checklist (`device_recovery_checklists`, one
+per case, mirroring `ceir_records`) guides the user through the master spec's own review list -
+several items conditional ("if appropriate", "if previously blocked") - each linking out to its own
+already-built flow (SIM Protection, CEIR, Account Recovery, Financial Security, Evidence Vault)
+rather than re-implementing any of them. Closing requires an explicit
+`confirmedUnresolvedActionsReviewed: true` flag (the close screen shows every not-yet-resolved
+`RecoveryPlanAction` right above the checkbox that sets it) rather than requiring every action be
+complete - a device recovered quickly may never need a police report at all. Two independent
+timestamps (`recovered_at`, `closed_at`) avoid the ambiguity `recovery_cases.closed_at` alone would
+have, since it only records the *first* terminal-status transition and this flow deliberately goes
+`RECOVERED` then `CLOSED`. `buildFinalCaseSummary.ts` is a distinct document from Part 16's sanitized
+Timeline export - the master spec's field list explicitly names real location observations, so this
+one is the user's own closing record, not built for external sharing. Adding the checklist's new
+enum array column reproduced a known class of bug (`node-pg` needs each custom enum array type
+registered by hand - see `db/arrayTypeParsers.ts`), caught immediately by the first integration
+test. Screenshot-verifying the actual click-through flow (not just HTTP calls) caught two more real
+issues no test suite would: every checklist toggle was re-fetching the expensive final summary for
+no reason (nothing in it depends on checklist state), adding several seconds of visible lag; and the
+original always-flash-to-loading refresh was unmounting `CloseCasePanel` on every toggle, silently
+resetting its "I've reviewed the unresolved actions" checkbox. See
+[`DEVICE_RECOVERED.md`](DEVICE_RECOVERED.md) for the full design.
 
 ## External-service abstraction
 

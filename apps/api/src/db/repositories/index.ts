@@ -2,6 +2,7 @@ import type { Queryable } from '../queryable';
 import { AccountRecoveryAttemptRepository } from './accountRecoveryAttemptRepository';
 import { AuditEventRepository } from './auditEventRepository';
 import { CeirRecordRepository } from './ceirRecordRepository';
+import { DeviceRecoveryChecklistRepository } from './deviceRecoveryChecklistRepository';
 import { DeviceRepository } from './deviceRepository';
 import { EvidenceRepository } from './evidenceRepository';
 import { FinancialProtectionItemRepository } from './financialProtectionItemRepository';
@@ -37,6 +38,7 @@ export function createRepositories(db: Queryable) {
     accountRecoveryAttempts: new AccountRecoveryAttemptRepository(db),
     simProtectionRecords: new SimProtectionRecordRepository(db),
     financialProtectionItems: new FinancialProtectionItemRepository(db),
+    deviceRecoveryChecklists: new DeviceRecoveryChecklistRepository(db),
   };
 }
 
@@ -57,3 +59,4 @@ export * from './auditEventRepository';
 export * from './accountRecoveryAttemptRepository';
 export * from './simProtectionRecordRepository';
 export * from './financialProtectionItemRepository';
+export * from './deviceRecoveryChecklistRepository';

@@ -10,7 +10,12 @@ import { types, type Pool } from 'pg';
  * dynamically-assigned array OID and registers a parser for it, once per
  * process.
  */
-const ENUM_ARRAY_TYPE_NAMES = ['sensitive_app_type', 'ceir_checklist_item', 'account_access_signal'] as const;
+const ENUM_ARRAY_TYPE_NAMES = [
+  'sensitive_app_type',
+  'ceir_checklist_item',
+  'account_access_signal',
+  'device_recovery_checklist_item',
+] as const;
 
 function parsePostgresEnumArrayLiteral(raw: string): string[] {
   if (raw === '{}') return [];

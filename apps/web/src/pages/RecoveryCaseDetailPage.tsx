@@ -122,6 +122,16 @@ export function RecoveryCaseDetailPage(): ReactElement {
 
       <CaseSummaryHeader recoveryCase={recoveryCase} device={device} latestLocation={latestLocation} />
 
+      {recoveryCase.status !== 'CLOSED' ? (
+        <Link
+          to={`/recovery-cases/${caseIdTyped}/recovered`}
+          className="flex items-center justify-between gap-3 rounded-lg border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40"
+        >
+          <span>I found my phone</span>
+          <span aria-hidden="true">&rarr;</span>
+        </Link>
+      ) : null}
+
       {actionError ? <p className="text-sm text-red-400">{actionError}</p> : null}
 
       <RecoveryProgressCard caseId={caseIdTyped} plan={recoveryPlan} submitting={submitting} onMarkActionDone={handleMarkActionDone} />

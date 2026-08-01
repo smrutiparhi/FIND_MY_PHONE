@@ -20,6 +20,7 @@ import { SimProtectionPage } from '../pages/SimProtectionPage';
 import { FinancialSecurityPage } from '../pages/FinancialSecurityPage';
 import { PoliceReportPage } from '../pages/PoliceReportPage';
 import { CeirPage } from '../pages/CeirPage';
+import { EvidenceVaultPage } from '../pages/EvidenceVaultPage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -69,6 +70,7 @@ export function AppRoutes(): ReactElement {
           <Route path="/recovery-cases/:caseId/financial-security" element={<FinancialSecurityPage />} />
           <Route path="/recovery-cases/:caseId/police-report" element={<PoliceReportPage />} />
           <Route path="/recovery-cases/:caseId/ceir" element={<CeirPage />} />
+          <Route path="/recovery-cases/:caseId/evidence" element={<EvidenceVaultPage />} />
           <Route
             path="/evidence"
             element={

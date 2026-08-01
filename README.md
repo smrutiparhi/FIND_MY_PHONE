@@ -13,6 +13,18 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 15 — Evidence Vault.** Secure, per-case file storage (`/recovery-cases/:caseId/evidence`) for
+purchase invoices, device photos, IMEI/serial documentation, location screenshots, and other
+recovery evidence — plus the police complaint and CEIR records Parts 13/14 already generate. Files
+are validated against a tight type/size allow-list, pass through a malware-scanning integration
+point (no real scanning provider is configured, so files are correctly left "scan pending" rather
+than falsely marked clean), and are stored in a private Supabase Storage bucket that is never
+publicly reachable — every read goes through a signed URL that expires in five minutes. Every
+upload, access, and delete is audit-logged. The two Evidence rows Parts 13/14 create for generated
+text (not real file uploads) are served back out as their actual content rather than pointed at
+object storage that was never written to. See [`docs/EVIDENCE_VAULT.md`](docs/EVIDENCE_VAULT.md)
+for the full design.
+
 **Part 14 — CEIR Assistant for India.** A guided flow (`/recovery-cases/:caseId/ceir`) for preparing
 and tracking the official Government of India CEIR/Sanchar Saathi IMEI-blocking process — a
 checklist (IMEI, mobile number, device details, police report, identity document, purchase invoice,

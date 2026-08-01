@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/authenticate';
 import { validate } from '../middleware/validate';
-import { agentMessageRateLimiter } from '../middleware/rateLimiter';
+import { agentMessageRateLimiter, evidenceUploadRateLimiter } from '../middleware/rateLimiter';
+import { evidenceUploadMiddleware } from '../middleware/evidenceUpload';
 import { asyncHandler } from '../lib/asyncHandler';
 import {
   createCase,
@@ -32,6 +33,12 @@ import {
 } from '../controllers/policeReport.controller';
 import { getCeir, patchCeir } from '../controllers/ceir.controller';
 import {
+  deleteEvidenceHandler,
+  getEvidenceAccessHandler,
+  listEvidence,
+  postEvidence,
+} from '../controllers/evidence.controller';
+import {
   caseActionParamsSchema,
   caseIdParamsSchema,
   createRecoveryCaseWizardSchema,
@@ -54,6 +61,11 @@ import {
   updatePoliceReportDraftSchema,
 } from '../validation/schemas/policeReport.schemas';
 import { updateCeirRecordSchema } from '../validation/schemas/ceir.schemas';
+import {
+  evidenceCaseParamsSchema,
+  evidenceItemParamsSchema,
+  uploadEvidenceBodySchema,
+} from '../validation/schemas/evidence.schemas';
 
 export const recoveryCaseRouter = Router();
 
@@ -205,4 +217,31 @@ recoveryCaseRouter.patch(
   validate(caseIdParamsSchema, 'params'),
   validate(updateCeirRecordSchema),
   asyncHandler(patchCeir),
+);
+recoveryCaseRouter.get(
+  '/:caseId/evidence',
+  requireAuth,
+  validate(evidenceCaseParamsSchema, 'params'),
+  asyncHandler(listEvidence),
+);
+recoveryCaseRouter.post(
+  '/:caseId/evidence',
+  requireAuth,
+  evidenceUploadRateLimiter,
+  validate(evidenceCaseParamsSchema, 'params'),
+  evidenceUploadMiddleware,
+  validate(uploadEvidenceBodySchema),
+  asyncHandler(postEvidence),
+);
+recoveryCaseRouter.get(
+  '/:caseId/evidence/:evidenceId/access',
+  requireAuth,
+  validate(evidenceItemParamsSchema, 'params'),
+  asyncHandler(getEvidenceAccessHandler),
+);
+recoveryCaseRouter.delete(
+  '/:caseId/evidence/:evidenceId',
+  requireAuth,
+  validate(evidenceItemParamsSchema, 'params'),
+  asyncHandler(deleteEvidenceHandler),
 );

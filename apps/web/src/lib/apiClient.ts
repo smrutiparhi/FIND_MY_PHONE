@@ -21,11 +21,14 @@ async function authHeaders(): Promise<HeadersInit> {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  // FormData bodies (evidence uploads) must NOT get a manual Content-Type - the browser sets one
+  // itself with the correct multipart boundary, which we can't reproduce by hand.
+  const isFormData = init?.body instanceof FormData;
   const response = await fetch(`${clientEnv.apiBaseUrl}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init?.body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(await authHeaders()),
       ...init?.headers,
     },
@@ -64,4 +67,8 @@ export function apiPatch<T>(path: string, body: unknown, init?: RequestInit): Pr
 
 export function apiDelete<T>(path: string, init?: RequestInit): Promise<T> {
   return apiRequest<T>(path, { ...init, method: 'DELETE' });
+}
+
+export function apiUpload<T>(path: string, formData: FormData, init?: RequestInit): Promise<T> {
+  return apiRequest<T>(path, { ...init, method: 'POST', body: formData });
 }

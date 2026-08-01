@@ -376,6 +376,25 @@ partial-update idiom shared by Parts 9/11/12's own services — see [`CEIR.md`](
 this part's own `ceirService.ts` avoids it, the three earlier call sites were left as-is. See
 [`CEIR.md`](CEIR.md) for the full design.
 
+## Evidence Vault (Part 15)
+
+`evidence`, its category/malware-scan enums, and the repository were built in Part 2 — Parts 13 and
+14 were already creating real `Evidence` rows for their own generated content before this part
+existed. Part 15 adds what the schema was always waiting for: a real upload path
+(`services/evidence/evidenceService.ts`), private Supabase Storage
+(`services/evidence/evidenceStorage.ts` — bucket created lazily with `public: false`, so "do not
+expose evidence through public URLs" holds at the storage layer itself, not just in application
+code), and short-lived signed access URLs rather than any permanent link. Uploads pass through a
+tight MIME allow-list and size cap (`evidenceValidation.ts`, re-checked at the storage layer as
+defense in depth) and a malware-scan integration point (`malwareScan.ts`) that — like every other
+external-service touchpoint in this app — always reports `not_configured` today rather than
+fabricate a `CLEAN` result, leaving `malware_scan_status` at the schema's own `PENDING` default.
+`resolveEvidenceAccess.ts` is the other half of Parts 13/14's own `internal:...` `storageKey`
+convention: it recognizes those markers and serves the real underlying text (an approved police
+complaint, a CEIR record summary) back out instead of asking object storage for a file that was
+never written. `audit_events` (Part 2, never called until now) gets one row per upload, access, and
+delete. See [`EVIDENCE_VAULT.md`](EVIDENCE_VAULT.md) for the full design.
+
 ## External-service abstraction
 
 `services/external/ExternalServiceResult.ts` defines a discriminated union —

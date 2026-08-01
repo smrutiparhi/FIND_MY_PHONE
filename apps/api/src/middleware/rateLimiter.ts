@@ -24,3 +24,15 @@ export const agentMessageRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Every evidence upload costs real object-storage space and bandwidth -
+ * tighter than the app-wide baseline so a scripted client can't fill a
+ * user's Evidence Vault (or storage costs) via repeated large uploads.
+ */
+export const evidenceUploadRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});

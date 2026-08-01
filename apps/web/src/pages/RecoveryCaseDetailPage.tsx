@@ -147,6 +147,12 @@ export function RecoveryCaseDetailPage(): ReactElement {
           >
             CEIR / IMEI blocking
           </Link>
+          <Link
+            to={`/recovery-cases/${recoveryCase.id}/evidence`}
+            className="inline-flex items-center rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            Evidence Vault
+          </Link>
         </div>
       </div>
 

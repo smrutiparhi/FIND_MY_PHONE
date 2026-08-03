@@ -22,6 +22,22 @@ export function getPool(): Pool | undefined {
   return pool;
 }
 
+/**
+ * Closes the shared pool and clears the singleton so a subsequent getPool()
+ * lazily opens a fresh one. Exists for tests/http and tests/scenarios: those
+ * exercise the app through createApp(), which pulls from this pool - a
+ * second, separate one from tests/setup.ts's own testPool - and left open
+ * for the rest of a long suite run, the two together can exceed Supabase's
+ * session-mode pooler connection limit. Never called by the running server
+ * itself, only by test teardown.
+ */
+export async function closePool(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = undefined;
+  }
+}
+
 export async function checkDatabaseConnection(): Promise<boolean> {
   const activePool = getPool();
   if (!activePool) {

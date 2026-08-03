@@ -517,6 +517,27 @@ Supabase-issued tokens via `supertest` against `createApp()`), not just at the r
 where `tests/repositories/ownership.test.ts` already covered it. Full writeup, remaining accepted
 risks, and the complete per-threat checklist: [`SECURITY.md`](SECURITY.md).
 
+## Testing (Part 21)
+
+Most of Part 21's own checklist (authentication, authorization, device CRUD, risk assessment, SIM/
+account-recovery/financial/police/CEIR/evidence/timeline state) was already covered by the 44 test
+files built alongside every earlier part - Part 21's real job was auditing that coverage for gaps
+and filling exactly those in. Two genuine gaps existed: the master spec's ten named end-to-end
+scenarios had never been written as their own tests (individual pieces were proven in isolation, but
+nothing walked a full incident story through the real stack), and there was no automated mobile-
+responsiveness or accessibility coverage at all. `tests/scenarios/endToEndScenarios.test.ts` adds the
+ten scenarios using the same real-stack HTTP infrastructure Part 20 built
+(`createApp()` + `supertest` + real disposable Supabase accounts) - scenario 9 ("device recovered
+after CEIR submission") is the only one that drives a case through its full lifecycle
+(SIM → account recovery → police report → CEIR → device recovered → closed) rather than just
+checking the initial risk assessment. A new `apps/web/e2e/` Playwright suite
+(`@playwright/test` + `@axe-core/playwright`, run via `npm run test:e2e -w apps/web`) covers what no
+backend test can: real mobile-viewport rendering (zero horizontal overflow, the nav actually
+collapsing to and opening from a hamburger menu) and an axe-core accessibility scan failing on
+`serious`/`critical` violations. Both AI and map providers default to `mock`/`none` and the test
+environment pins them explicitly, so no test run ever calls a real external AI or map API - see
+[`TESTING.md`](TESTING.md) for the full strategy and the per-scenario breakdown.
+
 ## Environment configuration
 
 `packages/config` defines a single Zod schema (`serverEnvSchema`) documenting every server-side

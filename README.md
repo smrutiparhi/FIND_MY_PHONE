@@ -13,6 +13,23 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 21 — Testing.** Most of this part's own checklist (authentication, authorization, device CRUD,
+risk assessment, SIM/account-recovery/financial/police/CEIR/evidence/timeline state) was already
+covered by the 44 test files built alongside every earlier part - the real work here was auditing
+that coverage for gaps and filling exactly those in, not rebuilding what already existed. Two
+genuine gaps: the master spec's ten named end-to-end scenarios ("Lost Android at home," "Stolen
+iPhone without Apple account access," "Phone stolen while unlocked with UPI apps," ...) had never
+been written as their own tests, and there was no automated mobile-responsiveness or accessibility
+coverage at all. Added `tests/scenarios/endToEndScenarios.test.ts` (all ten, through the real HTTP
+stack Part 20 built - one of them, "device recovered after CEIR submission," drives a case through
+its entire lifecycle: SIM block → account recovery → police report → CEIR → device recovered →
+closed) and a new `apps/web/e2e/` Playwright suite with axe-core accessibility scanning and real
+mobile-viewport checks (`npm run test:e2e -w apps/web`). Building the latter surfaced a real,
+unrelated problem while debugging a failed login: the `demo.login@example.com` Supabase Auth account
+referenced throughout this project's own testing had been deleted from Supabase entirely at some
+point - recreated with the same credentials. See [`docs/TESTING.md`](docs/TESTING.md) for the full
+strategy and the scenario-by-scenario breakdown.
+
 **Part 20 — Security hardening.** A dedicated audit-and-harden pass across all prior parts, not a
 rebuild - most of the checklist (ownership-scoped repository methods everywhere, AES-256-GCM IMEI
 encryption, signed-URL-only evidence access, parameterized queries throughout, `helmet`, CORS locked

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../../src/app';
 import { env } from '../../src/config/env';
+import { closePool } from '../../src/db/pool';
 import { createHttpTestUser, deleteHttpTestUser, type HttpTestUser } from './httpTestHelpers';
 
 /**
@@ -27,6 +28,10 @@ describe('HTTP authorization and security', () => {
   afterAll(async () => {
     await deleteHttpTestUser(userA);
     await deleteHttpTestUser(userB);
+    // createApp() pulls from its own db pool, separate from tests/setup.ts's testPool - left
+    // open for the rest of a long suite run, the two together can exceed Supabase's
+    // session-mode pooler connection limit (see db/pool.ts's closePool() doc comment).
+    await closePool();
   });
 
   describe('authentication', () => {

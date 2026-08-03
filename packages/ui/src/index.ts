@@ -25,3 +25,4 @@ export * from './EvidenceCard';
 export * from './EmergencyBanner';
 export * from './NextActionCard';
 export * from './AgentPanel';
+export * from './DemoDataBadge';

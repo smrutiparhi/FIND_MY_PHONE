@@ -17,5 +17,6 @@ export * from './types/evidence';
 export * from './types/timeline';
 export * from './types/deviceRecovery';
 export * from './types/notifications';
+export * from './types/demo';
 export * from './utils/brand';
 export * from './utils/formatRelativeTime';

@@ -25,6 +25,7 @@ import { EvidenceVaultPage } from '../pages/EvidenceVaultPage';
 import { TimelinePage } from '../pages/TimelinePage';
 import { DeviceRecoveredPage } from '../pages/DeviceRecoveredPage';
 import { NotificationsPage } from '../pages/NotificationsPage';
+import { DemoEntryPage } from '../pages/DemoEntryPage';
 
 export function AppRoutes(): ReactElement {
   return (
@@ -50,6 +51,7 @@ export function AppRoutes(): ReactElement {
 
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/demo" element={<DemoEntryPage />} />
           <Route
             path="/devices"
             element={

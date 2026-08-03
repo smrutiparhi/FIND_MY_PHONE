@@ -120,6 +120,7 @@ describe('buildCaseContextBlock - device fields must never reach the model unfen
       simAccessStatus: null,
       locationCapability: null,
       currentRecommendedActionId: null,
+      isDemo: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       closedAt: null,

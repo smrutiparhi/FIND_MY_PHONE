@@ -1,6 +1,6 @@
 # RecoverAI — Database (Part 2)
 
-PostgreSQL schema for RecoverAI, applied through 22 hand-written SQL migrations
+PostgreSQL schema for RecoverAI, applied through 23 hand-written SQL migrations
 (`apps/api/src/db/migrations/`) run by a minimal custom runner
 (`apps/api/src/db/migrate.ts`) — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for
 why this project uses plain SQL + a repository layer instead of an ORM.
@@ -60,6 +60,7 @@ erDiagram
         case_status status
         risk_level risk_level
         uuid current_recommended_action_id FK
+        boolean is_demo "Part 22, default false"
         timestamptz closed_at
     }
     INCIDENT_ASSESSMENTS {
@@ -320,6 +321,12 @@ case history, `users` on account deletion, which cascades everywhere).
   guaranteed to disappear via its case when the owning user is deleted, so
   `RESTRICT` there only ever blocked account deletion, never protected
   anything.
+- `recovery_cases.is_demo` (Part 22) is the only isolation mechanism Demo
+  Mode needs - not replicated onto any child table, since every one of them
+  already cascades from `recovery_cases`. Excluded from `listByUser` /
+  `listDashboardSummariesByUser` so a demo case never appears on a real
+  dashboard; `deleteDemoCase` carries a redundant `AND is_demo = true` in its
+  own query as defense-in-depth against ever deleting a real case.
 
 ### Two Postgres gotchas worth documenting for future migrations
 

@@ -114,6 +114,7 @@ All routes are mounted under `/api`. Convention going forward:
                          device" step. Standalone device management stays a nav placeholder.
 /api/recovery-cases/:id/location, /sim, /account-recovery, /financial, /police, /ceir, /evidence,
   /timeline                nested under the owning case (Parts 8–16)
+/api/demo                Part 22 - start/resume, get state, advance, delete the caller's one demo case
 ```
 
 Every response body — success or error — uses the shared envelope from `packages/shared`:
@@ -220,7 +221,7 @@ had no way to persist a corrected sensitive-app answer).
 Plain PostgreSQL via `pg`, addressed through a single `DATABASE_URL` — deliberately provider
 agnostic, so it works the same whether Postgres is Supabase-managed or self-hosted. `db/pool.ts`
 lazily creates a shared connection pool and exposes `checkDatabaseConnection()`, used by the
-readiness endpoint. Part 2 built out the full schema (22 hand-written SQL migrations as of Part 19, no ORM), a
+readiness endpoint. Part 2 built out the full schema (23 hand-written SQL migrations as of Part 22, no ORM), a
 repository class per entity (`db/repositories/*Repository.ts`, all sharing a `Queryable`
 interface so a transaction client can substitute for the pool), and 62 tests run against a real
 Postgres instance. See [`DATABASE.md`](DATABASE.md) for the schema, ER diagram, and design
@@ -537,6 +538,25 @@ collapsing to and opening from a hamburger menu) and an axe-core accessibility s
 `serious`/`critical` violations. Both AI and map providers default to `mock`/`none` and the test
 environment pins them explicitly, so no test run ever calls a real external AI or map API - see
 [`TESTING.md`](TESTING.md) for the full strategy and the per-scenario breakdown.
+
+## Demo Mode (Part 22)
+
+A self-contained, clearly labeled "Android stolen at Hyderabad Metro" walkthrough for portfolio
+demonstrations, driven through the master spec's own 10-stage sequence. `demoService.ts` calls the
+exact same service functions every real page already uses (`updateSimProtectionRecord`,
+`createPoliceReport`/`approvePoliceReport`/`markPoliceReportSubmitted`, `updateCeirRecord`,
+`updateDeviceRecoveryChecklist`) rather than inventing demo-only logic, and the guided stepper
+(`DemoModeBar`, rendered by `AppLayout` whenever the current route's `:caseId` resolves to a demo
+case) just navigates the same real pages a user would visit themselves. Isolation is a single
+`recovery_cases.is_demo` boolean, not replicated onto any child table, enforced at the dashboard
+query level, at every `/api/demo/*` endpoint (`assertDemoCase`/`ForbiddenError`), and redundantly in
+`deleteDemoCase`'s own SQL; notifications are suppressed entirely for demo-case events, checked once
+centrally in `createNotification`. There's no stored stage column - `deriveCurrentStage()` inspects
+the case's actual state (status, checklist, CEIR/police/SIM status, whether a location observation
+exists) in the same order the stages run, so refreshing mid-demo resumes at real progress instead of
+restarting. See [`DEMO_MODE.md`](DEMO_MODE.md) for the full stage-by-stage breakdown and the two real
+bugs (`LoginPage`'s redirect-target handling, missing loading feedback on the stepper) that driving
+the flow end-to-end in a browser caught.
 
 ## Environment configuration
 

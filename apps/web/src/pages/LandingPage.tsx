@@ -61,6 +61,12 @@ export function LandingPage(): ReactElement {
             I already have an account
           </Link>
         </div>
+        <p className="mt-4 text-sm text-slate-500">
+          Just here to look around?{' '}
+          <Link to="/demo" className="font-medium text-fuchsia-300 hover:text-fuchsia-200">
+            Try the guided demo &rarr;
+          </Link>
+        </p>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-24">

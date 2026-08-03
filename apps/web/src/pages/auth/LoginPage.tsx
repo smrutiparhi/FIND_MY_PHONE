@@ -15,8 +15,9 @@ export function LoginPage(): ReactElement {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectTo = (location.state as { from?: string } | null)?.from ?? '/dashboard';
+
   if (!loading && session) {
-    const redirectTo = (location.state as { from?: string } | null)?.from ?? '/dashboard';
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -33,7 +34,7 @@ export function LoginPage(): ReactElement {
       setError('Incorrect email or password.');
       return;
     }
-    navigate('/dashboard', { replace: true });
+    navigate(redirectTo, { replace: true });
   }
 
   return (

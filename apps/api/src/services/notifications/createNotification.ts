@@ -24,10 +24,20 @@ export interface CreateNotificationInput {
  * transaction) instead of opening a second connection.
  *
  * Returns `null` when the notification was suppressed by preferences/quiet
- * hours - never an error, since "the user asked not to be notified" is a
- * normal, expected outcome, not a failure.
+ * hours, or when the case is a Part 22 Demo Mode case - never an error,
+ * since both are normal, expected outcomes, not failures. Demo cases never
+ * produce a real notification (in-app or emailed): a fictional "SIM
+ * blocked" alert has no business mixing into a user's real notification
+ * list, and Demo Mode must never send anything to a real external account
+ * (the master spec, verbatim) - checked here, once, rather than trusting
+ * every one of the half-dozen call sites to remember to skip demo cases.
  */
 export async function createNotification(repos: Repositories, input: CreateNotificationInput): Promise<Notification | null> {
+  if (input.caseId) {
+    const recoveryCase = await repos.recoveryCases.findById(input.caseId, input.userId);
+    if (recoveryCase?.isDemo) return null;
+  }
+
   const prefs = await repos.notificationPreferences.getOrCreateForUser(input.userId);
   if (!shouldCreateNotification(prefs, input.type)) return null;
 

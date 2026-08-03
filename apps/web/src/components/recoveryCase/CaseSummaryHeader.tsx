@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import type { Device, LocationObservation, RecoveryCase } from '@recoverai/shared';
 import { formatRelativeTime } from '@recoverai/shared';
-import { RiskBadge, CaseStatusBadge } from '@recoverai/ui';
+import { RiskBadge, CaseStatusBadge, DemoDataBadge } from '@recoverai/ui';
 
 const INCIDENT_LABELS: Record<RecoveryCase['incidentType'], string> = {
   LOST: 'Lost',
@@ -25,7 +25,10 @@ export function CaseSummaryHeader({ recoveryCase, device, latestLocation }: Case
       </Link>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">{INCIDENT_LABELS[recoveryCase.incidentType]}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">{INCIDENT_LABELS[recoveryCase.incidentType]}</p>
+            {recoveryCase.isDemo ? <DemoDataBadge /> : null}
+          </div>
           <h1 className="text-2xl font-semibold text-white">{device.nickname}</h1>
           <p className="text-sm text-slate-400">
             {device.manufacturer} {device.model}

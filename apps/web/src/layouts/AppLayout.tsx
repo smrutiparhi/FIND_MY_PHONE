@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import type { NotificationListState } from '@recoverai/shared';
+import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
+import type { NotificationListState, RecoveryCaseId } from '@recoverai/shared';
 import { apiGet } from '../lib/apiClient';
+import { DemoModeBar } from '../components/demo/DemoModeBar';
 
 const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
   { to: '/dashboard', label: 'Dashboard', end: true },
@@ -31,6 +32,10 @@ export function AppLayout(): ReactElement {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
+  // Picks up :caseId from whatever nested route matched (e.g. /recovery-cases/:caseId/sim) -
+  // React Router merges params across the whole matched branch, so this works from the layout
+  // route even though AppLayout itself declares no :caseId param of its own.
+  const { caseId } = useParams<{ caseId?: string }>();
 
   // AppLayout wraps every authenticated route via <Outlet /> and never
   // remounts on client-side navigation, so fetching once on mount alone
@@ -110,6 +115,7 @@ export function AppLayout(): ReactElement {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
+        {caseId ? <DemoModeBar caseId={caseId as RecoveryCaseId} /> : null}
         <Outlet />
       </main>
     </div>

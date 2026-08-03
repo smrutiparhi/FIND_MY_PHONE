@@ -34,6 +34,7 @@ interface RecoveryCaseRow {
   sim_access_status: SimAccessStatus | null;
   location_capability: TriStateAnswer | null;
   current_recommended_action_id: string | null;
+  is_demo: boolean;
   created_at: string;
   updated_at: string;
   closed_at: string | null;
@@ -54,6 +55,7 @@ function toRecoveryCase(row: RecoveryCaseRow): RecoveryCase {
     simAccessStatus: row.sim_access_status,
     locationCapability: row.location_capability,
     currentRecommendedActionId: row.current_recommended_action_id as RecoveryActionId | null,
+    isDemo: row.is_demo,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     closedAt: row.closed_at,
@@ -124,6 +126,8 @@ export interface CreateRecoveryCaseInput {
   accountAccessStatus?: TriStateAnswer | null;
   simAccessStatus?: SimAccessStatus | null;
   locationCapability?: TriStateAnswer | null;
+  /** Part 22 (Demo Mode) - omit/false for every real case; the wizard never sets this. */
+  isDemo?: boolean;
 }
 
 export interface UpdateRecoveryCaseInput {
@@ -151,8 +155,8 @@ export class RecoveryCaseRepository {
     const result = await this.db.query<RecoveryCaseRow>(
       `INSERT INTO recovery_cases
          (user_id, device_id, incident_type, occurred_at, last_seen_at, last_seen_description,
-          account_access_status, sim_access_status, location_capability)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          account_access_status, sim_access_status, location_capability, is_demo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         input.userId,
@@ -164,6 +168,7 @@ export class RecoveryCaseRepository {
         input.accountAccessStatus ?? null,
         input.simAccessStatus ?? null,
         input.locationCapability ?? null,
+        input.isDemo ?? false,
       ],
     );
     const row = result.rows[0];
@@ -180,15 +185,46 @@ export class RecoveryCaseRepository {
     return row ? toRecoveryCase(row) : null;
   }
 
-  /** Active cases first (per Part 4 dashboard requirement), newest first within each group. */
+  /**
+   * Active cases first (per Part 4 dashboard requirement), newest first within each group.
+   * Excludes demo cases (Part 22) - real callers (the dashboard, reminder notifications) should
+   * never see or act on a fictional case; use findActiveDemoCase for the demo flow instead.
+   */
   async listByUser(ownerUserId: UserId): Promise<RecoveryCase[]> {
     const result = await this.db.query<RecoveryCaseRow>(
       `SELECT * FROM recovery_cases
-       WHERE user_id = $1
+       WHERE user_id = $1 AND is_demo = false
        ORDER BY (status = ANY($2::case_status[])) ASC, created_at DESC`,
       [ownerUserId, TERMINAL_STATUSES],
     );
     return result.rows.map(toRecoveryCase);
+  }
+
+  /** The demo flow's own lookup (Part 22) - most recent non-terminal demo case, so re-entering /demo resumes instead of piling up duplicates. */
+  async findActiveDemoCase(ownerUserId: UserId): Promise<RecoveryCase | null> {
+    const result = await this.db.query<RecoveryCaseRow>(
+      `SELECT * FROM recovery_cases
+       WHERE user_id = $1 AND is_demo = true AND status != ALL($2::case_status[])
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [ownerUserId, TERMINAL_STATUSES],
+    );
+    const row = result.rows[0];
+    return row ? toRecoveryCase(row) : null;
+  }
+
+  /**
+   * Guarded at the SQL level, not just the service layer - only ever deletes a row that is
+   * already flagged is_demo = true, so a bug in the calling service can't accidentally delete a
+   * real case through this method (defense in depth for "Demo Mode must never be confused with
+   * real recovery operations").
+   */
+  async deleteDemoCase(id: RecoveryCaseId, ownerUserId: UserId): Promise<boolean> {
+    const result = await this.db.query(
+      'DELETE FROM recovery_cases WHERE id = $1 AND user_id = $2 AND is_demo = true',
+      [id, ownerUserId],
+    );
+    return (result.rowCount ?? 0) > 0;
   }
 
   async update(
@@ -274,7 +310,7 @@ export class RecoveryCaseRepository {
          FROM recovery_actions
          WHERE case_id = rc.id
        ) action_counts ON true
-       WHERE rc.user_id = $1
+       WHERE rc.user_id = $1 AND rc.is_demo = false
        ORDER BY (rc.status = ANY($2::case_status[])) ASC, rc.updated_at DESC`,
       [ownerUserId, TERMINAL_STATUSES],
     );

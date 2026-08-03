@@ -52,9 +52,14 @@ export function DashboardPage(): ReactElement {
           <h1 className="font-display text-2xl font-semibold text-white">Dashboard</h1>
           <p className="text-sm text-slate-400">Your active and past device recovery cases.</p>
         </div>
-        <Link to="/recovery/new" className={REPORT_CTA_CLASSES}>
-          Report Lost or Stolen Phone
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          <Link to="/demo" className="text-sm font-medium text-fuchsia-300 hover:text-fuchsia-200">
+            🎬 View demo
+          </Link>
+          <Link to="/recovery/new" className={REPORT_CTA_CLASSES}>
+            Report Lost or Stolen Phone
+          </Link>
+        </div>
       </div>
 
       {state.status === 'loading' ? (

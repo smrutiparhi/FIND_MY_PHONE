@@ -13,6 +13,23 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 22 — Demo Mode.** A clearly labeled, self-contained "Android stolen at Hyderabad Metro" demo
+for portfolio walkthroughs, driven through the master spec's own worked example and named 10-stage
+sequence (Report Stolen Phone → Risk Assessment → Location Screen → Recovery Decision Engine →
+Secure Device → Protect SIM → Generate Police Complaint → CEIR Assistant → Timeline → Device
+Recovered). Every stage calls the exact same service functions every real page already uses - no
+mocked or fake demo-only logic - and the guided stepper just navigates through the real app pages.
+Isolation is a single `recovery_cases.is_demo` boolean, enforced at the dashboard query level, at
+every demo endpoint (`assertDemoCase`/`ForbiddenError`), and redundantly in `deleteDemoCase`'s own
+SQL; notifications are suppressed entirely for demo-case events so a walkthrough never touches a
+real account or a real notification feed. Progress is derived from actual case state rather than
+stored, so refreshing mid-demo resumes correctly instead of restarting. Driving the full flow
+end-to-end in a browser caught two real bugs, both fixed: `LoginPage` ignored the redirect target
+from a `ProtectedRoute` bounce on successful sign-in (always sent every login to `/dashboard`,
+which would have quietly dropped a signed-out visitor's demo request), and the guided stepper's
+"Next" button gave no feedback beyond going disabled during the several-second, multi-step writes
+some stages perform. See [`docs/DEMO_MODE.md`](docs/DEMO_MODE.md).
+
 **Part 21 — Testing.** Most of this part's own checklist (authentication, authorization, device CRUD,
 risk assessment, SIM/account-recovery/financial/police/CEIR/evidence/timeline state) was already
 covered by the 44 test files built alongside every earlier part - the real work here was auditing

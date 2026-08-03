@@ -326,6 +326,8 @@ export interface RecoveryCase {
   simAccessStatus: SimAccessStatus | null;
   locationCapability: TriStateAnswer | null;
   currentRecommendedActionId: RecoveryActionId | null;
+  /** Part 22 (Demo Mode) - true only for fictional, isolated cases created by the demo flow. Never true for a real incident. */
+  isDemo: boolean;
   createdAt: string;
   updatedAt: string;
   closedAt: string | null;

@@ -62,7 +62,7 @@ export async function uploadEvidence(
   const recoveryCase = await repos.recoveryCases.findById(caseId, userId);
   if (!recoveryCase) throw new NotFoundError('Recovery case not found');
 
-  validateEvidenceFile({ mimeType: input.file.mimeType, sizeBytes: input.file.buffer.length });
+  validateEvidenceFile({ mimeType: input.file.mimeType, sizeBytes: input.file.buffer.length, buffer: input.file.buffer });
 
   const scan = await scanForMalware({ buffer: input.file.buffer, mimeType: input.file.mimeType });
   const malwareScanStatus = scan.status === 'success' ? scan.data.scanStatus : 'PENDING';

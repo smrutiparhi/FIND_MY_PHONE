@@ -68,9 +68,11 @@ instead of scattered across controllers (explicit master-spec requirement).
   stack traces; development responses do, to keep debugging fast.
 - **Async routes**: wrapped with `asyncHandler()` so a rejected promise reaches `errorHandler`
   instead of crashing the process or hanging the request.
-- **Logging**: `pino`, JSON in production / pretty-printed in development, with a redaction list
-  covering auth headers, cookies, and common secret field names. Part 20 (Security hardening)
-  extends the redaction list as IMEI, precise-location, and financial fields are introduced.
+- **Logging**: `pino`, JSON in production / pretty-printed in development, with `req.headers.
+  authorization`/`cookie` redacted unconditionally. No IMEI/password/token/OTP/secret field name
+  redaction list was needed on top of that: `pino-http`'s default serializers never log request/
+  response bodies at all, and Part 20 (Security hardening) confirmed by grep that no `logger.*()`
+  call anywhere references those field names or logs a whole domain object that could carry one.
 - **Validation strategy**: `zod` schemas, applied via a generic `validate(schema, target)`
   middleware factory - `PATCH /api/auth/me`'s `updateProfileSchema` (Part 3) is the first route to
   use it; every input-bearing route from here on follows the same pattern instead of ad hoc checks
@@ -487,20 +489,33 @@ Google) must return. There is no implicit "assume success" branch, which structu
 the master-spec rule that RecoverAI must never claim an external action succeeded unless the
 integration confirms it or the user confirms completion.
 
-## Security architecture (baseline now, hardened per-part and again in Part 20)
+## Security architecture (Part 20)
 
-Already in place: `helmet` security headers, CORS restricted to `WEB_ORIGIN`, strict TypeScript,
-a Zod validation pattern for input-bearing routes, structured logging with secret redaction, a
-baseline rate limiter, ownership-scoped repository methods for every entity plus AES-256-GCM
-encryption for IMEI/serial fields (Part 2), and (Part 3) token-based authentication via
-`requireAuth` plus RLS default-deny on every table - see `DATABASE.md` for the row-level-security
-reasoning and the "Authentication architecture" section above for why auth-specific *rate*
-limiting is intentionally absent from this app's own Express layer (credentials never reach it;
-Supabase's platform rate-limits its own Auth API). Route-level authorization for concrete
-resources (devices, cases, ...) lands in Part 4 alongside the first routes that need it -
-`req.user.id` from `requireAuth` is the mechanism, already wired through to every repository
-method. IDOR/XSS/CSRF/SSRF/file-upload hardening and a full threat model arrive alongside the
-features they protect (Parts 15, 20).
+Already in place since earlier parts, re-verified in Part 20's dedicated hardening pass rather than
+rebuilt: `helmet` security headers, CORS restricted to `WEB_ORIGIN`, strict TypeScript, a Zod
+validation pattern for input-bearing routes (strips unknown keys by default - no mass-assignment
+surface), structured logging with `req.headers.authorization`/`cookie` redaction, a baseline rate
+limiter plus two tighter cost-aware ones (AI agent messages, evidence uploads), ownership-scoped
+repository methods for every entity (`findByIdForUser` / `findById(id, ownerUserId)`) plus
+AES-256-GCM encryption for IMEI/serial fields, token-based authentication via `requireAuth`, and RLS
+default-deny on every table (see `DATABASE.md`). Auth-specific *rate* limiting is intentionally
+absent from this app's own Express layer because credentials never reach it - sign-up/sign-in/
+password-reset are Supabase Auth calls made directly from the frontend, with Supabase's own platform
+rate-limiting them, not a route this API exposes.
+
+Part 20 found and fixed two real gaps rather than just re-confirming existing controls: (1) the AI
+Recovery Agent's prompt-injection fencing (`wrapUntrustedContent`, Part 7) covered
+`lastSeenDescription` but not the equally user-controlled `device.nickname`/`manufacturer`/`model`
+fields, which reached the model unfenced; and, found while writing the regression test for that fix,
+(2) the fencing helper itself never neutralized occurrences of its own fence tags *inside* the
+untrusted text, so a value containing the literal closing tag could break out of the fence early - a
+bug that predated Part 20 and affected the original `lastSeenDescription` fencing too. Also hardened:
+evidence file uploads now verify magic bytes against the declared MIME type (was checking only the
+client-declared `Content-Type`, which a malicious client fully controls). A new
+`tests/http/authorization.test.ts` proves IDOR protection holds through the *real* HTTP stack (real
+Supabase-issued tokens via `supertest` against `createApp()`), not just at the repository layer
+where `tests/repositories/ownership.test.ts` already covered it. Full writeup, remaining accepted
+risks, and the complete per-threat checklist: [`SECURITY.md`](SECURITY.md).
 
 ## Environment configuration
 

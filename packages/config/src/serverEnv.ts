@@ -30,6 +30,14 @@ export const serverEnvSchema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 
+  // Part 20 (Security hardening): the same public/publishable anon key already shipped in
+  // the frontend bundle (apps/web's VITE_SUPABASE_ANON_KEY) - safe to duplicate here since
+  // it carries no privilege on its own (RLS enforces access, not this key). The server
+  // itself never uses it; it exists only so the HTTP-level authorization test suite can
+  // sign in as real, disposable Supabase Auth test users the same way the real frontend
+  // does, rather than mocking the auth layer.
+  SUPABASE_ANON_KEY: z.string().min(1).optional(),
+
   // Part 7 (AI Recovery Agent): 'mock' requires no key and is safe for local development.
   // AI_MODEL overrides each provider's default model id (see services/ai/index.ts) - useful
   // when an API key only has access to a different or dated model string.

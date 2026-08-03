@@ -13,6 +13,35 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 20 — Security hardening.** A dedicated audit-and-harden pass across all prior parts, not a
+rebuild - most of the checklist (ownership-scoped repository methods everywhere, AES-256-GCM IMEI
+encryption, signed-URL-only evidence access, parameterized queries throughout, `helmet`, CORS locked
+to one origin, auth/cookie header redaction in logs, production error messages that never leak a
+stack trace) was already in place from how earlier parts were built. Two real gaps got found and
+fixed instead of just re-confirmed: the AI Recovery Agent's prompt-injection fencing covered the
+last-seen description field but not the equally user-controlled device nickname/manufacturer/model,
+which reached the model unfenced - and, while writing the regression test for that, a more
+fundamental bug surfaced in the fencing helper itself: it never neutralized the fence tags if they
+appeared *inside* the untrusted text, so a value containing the literal closing tag could break out
+of the fence early (a bug that predated this part and affected the original field it was already
+protecting). Evidence uploads now verify magic bytes against the declared file type instead of
+trusting the client's `Content-Type` header alone. A new HTTP-level test suite
+(`tests/http/authorization.test.ts`) proves IDOR protection holds through the real Express/Supabase
+stack with real disposable test accounts, not just at the repository layer. See
+[`docs/SECURITY.md`](docs/SECURITY.md) for the full threat model and remaining accepted risks.
+
+**Part 23 — Final UI/UX.** A complete visual redesign, done ahead of its master-spec position at the
+user's explicit request. The master spec calls for "minimal, professional, avoid flashy effects" for
+this part; the user deliberately overrode that in favor of a cyberpunk-neon aesthetic instead (a
+documented, intentional deviation, not an oversight) - near-black background, glowing cyan/magenta
+neon accents, sharp-cornered glass panels, an animated falling-code background layer, all centralized
+in `apps/web/src/styles/index.css` and a new `@recoverai/ui` component package implementing the
+master spec's eleven named reusable components (`RiskBadge`, `CaseStatusBadge`,
+`RecoveryActionCard`, `ProgressIndicator`, `DeviceCard`, `LocationCard`, `TimelineItem`,
+`EvidenceCard`, `EmergencyBanner`, `NextActionCard`, `AgentPanel`) plus shared primitives
+(`GlassCard`, `Button`, `FormField`, `Skeleton`, `EmptyState`, `ErrorState`, `ConfirmDialog`). Also
+added a real public landing page - the app previously had none, bouncing straight to `/login`.
+
 **Part 19 — Notifications.** In-app notifications for the master spec's seven event types, plus
 per-user preferences (muting, quiet hours, channel toggles) — the first settings table in this app
 that's one row per *user* rather than per case. Four types fire at a real, immediate state

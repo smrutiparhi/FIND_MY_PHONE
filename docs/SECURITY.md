@@ -200,3 +200,18 @@ surface from an unexpected field riding along in a request body).
   bucket access controls, and TLS termination are a managed third party's responsibility; this
   document covers what RecoverAI's own code does with the access Supabase grants it (see
   [`DATABASE.md`](DATABASE.md) for the RLS default-deny posture at the database layer).
+- **Two `npm audit` advisories left unpatched as of Part 24**, both judged not applicable to how
+  this app actually uses the affected package rather than ignored: `react-router`
+  (GHSA-qwww-vcr4-c8h2, "RSC Mode CSRF Bypass") only affects React Router's server-actions/RSC data
+  path - this app uses plain `<BrowserRouter>` with manual `fetch` calls in `apiClient.ts`, never
+  `createBrowserRouter`/`RouterProvider`/route `action`s, so the vulnerable code path is never
+  reached; the only available fix is a downgrade below the entire vulnerable 7.12–8.2 range (losing
+  months of unrelated fixes) or an untested major-version jump, both worse than the risk being
+  avoided. `esbuild` (GHSA-g7r4-m6w7-qqqr, arbitrary file read via its dev server on Windows) is a
+  transitive build-time dependency (via `vite`/`tsup`) that never ships in `dist/` and never runs on
+  Vercel's or Render's Linux build containers - it only matters if someone else has network access
+  to a Windows machine's `vite dev` server, which local development here does not expose.
+- **Production reuses the local dev/test Supabase project** (Part 24 deployment decision, not a code
+  gap) - see [`DEPLOYMENT.md`](DEPLOYMENT.md#accepted-risk-production-shares-the-local-devtest-supabase-project)
+  for the concrete consequence (the test suite's `TRUNCATE` can delete real production data) and why
+  it was still accepted.

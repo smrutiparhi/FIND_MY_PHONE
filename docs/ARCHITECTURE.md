@@ -1,7 +1,8 @@
 # RecoverAI — Architecture (Part 1)
 
-This document captures the technical design decisions made while scaffolding the project. It
-will grow with each part and gets finalized in Part 24 (Final audit and deployment).
+This document captures the technical design decisions made while scaffolding the project, grown
+with each part through Part 24 (Final audit and deployment) - see [`DEPLOYMENT.md`](DEPLOYMENT.md)
+for how the app is actually hosted.
 
 ## Monorepo strategy
 

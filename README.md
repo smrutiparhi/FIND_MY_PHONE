@@ -13,6 +13,23 @@ design and [`docs/DATABASE.md`](docs/DATABASE.md) for the data model.
 
 ## Status
 
+**Part 24 — Final audit and deployment.** Deployed as two independently-hosted services from this
+same repo: the static frontend on Vercel, the long-lived Express API on Render - a split chosen
+because Render runs a persistent container (what the API's connection pooling and rate limiting
+were built assuming) while Vercel's serverless model fits the Vite static build better than it
+would fit Express. Both were chosen specifically for having a genuinely free-forever tier (no
+expiring trial credit, no card required) - the one tradeoff is that Render's free service sleeps
+after 15 minutes idle and takes 30-60s to wake on the next request, which was accepted deliberately
+over paying to keep it always-on. `vercel.json` and `render.yaml` at the repo root encode the
+monorepo-aware build/start commands for each; see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the
+full setup walkthrough, the two URLs' chicken-and-egg env var ordering, and the accepted risk of
+production sharing the same Supabase project as local dev/test (concretely: the test suite's
+`TRUNCATE` could delete real production data - documented, not silently risked). The audit pass
+bumped `react-router-dom` to its latest patch and left two remaining `npm audit` advisories
+deliberately unpatched after confirming neither's vulnerable code path is one this app actually
+exercises (see [`docs/SECURITY.md`](docs/SECURITY.md)'s accepted risks) rather than forcing an
+untested major-version jump right before shipping.
+
 **Part 22 — Demo Mode.** A clearly labeled, self-contained "Android stolen at Hyderabad Metro" demo
 for portfolio walkthroughs, driven through the master spec's own worked example and named 10-stage
 sequence (Report Stolen Phone → Risk Assessment → Location Screen → Recovery Decision Engine →

@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: recoverai-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: .
+    buildCommand: npm install && npm run build -w apps/api
+    startCommand: npm run start -w apps/api
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: AI_PROVIDER
+        value: mock
+      - key: MAP_PROVIDER
+        value: maptiler
+      # Everything below is a secret or deployment-specific value - Render
+      # will prompt for these in the dashboard instead of reading them from
+      # this file (sync: false = "don't auto-generate, I'll set it myself").
+      - key: WEB_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: MAP_API_KEY
+        sync: false
